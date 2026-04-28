@@ -1,0 +1,382 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+import { useGSAP } from '@gsap/react'
+import { gsap, ScrollTrigger } from '@/lib/gsap'
+import { MagneticButton } from './MagneticButton'
+
+export function HeroContent() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const statusRef = useRef<HTMLDivElement>(null)
+  const eyebrowRef = useRef<HTMLParagraphElement>(null)
+  const eyebrowLineRef = useRef<HTMLSpanElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const sublineRef = useRef<HTMLParagraphElement>(null)
+  const ctasRef = useRef<HTMLDivElement>(null)
+  const metaRef = useRef<HTMLDivElement>(null)
+  const scrollHintRef = useRef<HTMLDivElement>(null)
+  const scrollLineRef = useRef<HTMLDivElement>(null)
+
+  useGSAP(
+    () => {
+      const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      const tl = gsap.timeline({
+        defaults: { ease: 'expo.out' },
+        delay: noMotion ? 0 : 0.4,
+      })
+
+      tl.fromTo(
+        statusRef.current,
+        { opacity: 0, y: -8 },
+        { opacity: 1, y: 0, duration: noMotion ? 0.01 : 0.6 },
+        0,
+      )
+
+      tl.fromTo(
+        eyebrowLineRef.current,
+        { scaleX: 0 },
+        { scaleX: 1, duration: noMotion ? 0.01 : 0.8, transformOrigin: 'left' },
+        0.15,
+      ).fromTo(
+        eyebrowRef.current,
+        { opacity: 0, x: -8 },
+        { opacity: 1, x: 0, duration: noMotion ? 0.01 : 0.6 },
+        0.3,
+      )
+
+      if (headlineRef.current) {
+        const words = headlineRef.current.querySelectorAll<HTMLSpanElement>('[data-word]')
+        tl.fromTo(
+          words,
+          { clipPath: 'inset(0 0 100% 0)', y: 40 },
+          {
+            clipPath: 'inset(0 0 0% 0)',
+            y: 0,
+            stagger: noMotion ? 0 : 0.08,
+            duration: noMotion ? 0.01 : 1,
+          },
+          0.5,
+        )
+      }
+
+      tl.fromTo(
+        sublineRef.current,
+        { opacity: 0, y: 16 },
+        { opacity: 0.78, y: 0, duration: noMotion ? 0.01 : 0.8 },
+        1.0,
+      )
+
+      if (ctasRef.current) {
+        const targets = Array.from(ctasRef.current.children)
+        tl.fromTo(
+          targets,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, stagger: noMotion ? 0 : 0.1, duration: noMotion ? 0.01 : 0.7 },
+          1.15,
+        )
+      }
+
+      if (metaRef.current) {
+        const items = metaRef.current.querySelectorAll('[data-meta-item]')
+        tl.fromTo(
+          items,
+          { opacity: 0, x: -24 },
+          {
+            opacity: 1,
+            x: 0,
+            stagger: noMotion ? 0 : 0.08,
+            duration: noMotion ? 0.01 : 0.7,
+          },
+          1.3,
+        )
+      }
+
+      tl.fromTo(
+        scrollHintRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: noMotion ? 0.01 : 0.6 },
+        1.6,
+      )
+
+      if (!noMotion && scrollLineRef.current) {
+        gsap.fromTo(
+          scrollLineRef.current,
+          { scaleY: 0.15 },
+          {
+            scaleY: 1,
+            duration: 1.6,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            transformOrigin: 'top',
+            delay: 2.2,
+          },
+        )
+      }
+    },
+    { scope: containerRef },
+  )
+
+  useEffect(() => {
+    const st = ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top -100px',
+      onEnter: () =>
+        gsap.to(scrollHintRef.current, {
+          opacity: 0,
+          duration: 0.4,
+          ease: 'power2.in',
+          pointerEvents: 'none',
+        }),
+      onLeaveBack: () =>
+        gsap.to(scrollHintRef.current, {
+          opacity: 1,
+          duration: 0.4,
+          pointerEvents: 'auto',
+        }),
+    })
+    return () => st.kill()
+  }, [])
+
+  const headlineLines: { text: string; italic: boolean }[][] = [
+    [
+      { text: 'Un', italic: false },
+      { text: 'objeto', italic: false },
+      { text: 'hecho.', italic: false },
+    ],
+    [
+      { text: 'No', italic: true },
+      { text: 'fabricado.', italic: true },
+    ],
+  ]
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative md:absolute md:inset-0 pointer-events-none"
+      style={{ zIndex: 3 }}
+    >
+      <div
+        className="relative md:absolute pointer-events-auto flex flex-col"
+        style={{
+          paddingLeft: 'clamp(20px, 6vw, 96px)',
+          paddingRight: 'clamp(20px, 6vw, 96px)',
+          paddingTop: 'clamp(80px, 14vh, 140px)',
+          paddingBottom: 'clamp(48px, 10vh, 96px)',
+          maxWidth: 'min(680px, 100%)',
+        }}
+      >
+        {/* Status pill — sobre el badge eyebrow, en flujo */}
+        <div
+          ref={statusRef}
+          className="flex items-center gap-2.5 font-mono mb-6"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            color: 'rgba(240, 247, 240, 0.6)',
+            opacity: 0,
+          }}
+        >
+          <span
+            className="relative inline-flex items-center justify-center"
+            style={{ width: 10, height: 10 }}
+          >
+            <span
+              className="absolute inset-0 rounded-full animate-pulse-seiko"
+              style={{ backgroundColor: '#00FF88', opacity: 0.35 }}
+            />
+            <span
+              className="relative rounded-full"
+              style={{ width: 5, height: 5, backgroundColor: '#00FF88' }}
+            />
+          </span>
+          <span>En producción · 12 unidades restantes</span>
+        </div>
+
+        {/* Eyebrow línea + label */}
+        <div className="flex items-center gap-4 mb-6">
+          <span
+            ref={eyebrowLineRef}
+            aria-hidden
+            className="block"
+            style={{
+              width: 42,
+              height: 1,
+              backgroundColor: '#00FF88',
+              transformOrigin: 'left',
+              transform: 'scaleX(0)',
+            }}
+          />
+          <p
+            ref={eyebrowRef}
+            className="font-mono"
+            style={{
+              fontSize: 11,
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              color: '#00FF88',
+              fontWeight: 500,
+              opacity: 0,
+            }}
+          >
+            Buenos Aires · Edición limitada
+          </p>
+        </div>
+
+        {/* H1 */}
+        <h1
+          ref={headlineRef}
+          className="font-serif mb-6 md:mb-8 text-bone"
+          style={{
+            fontSize: 'clamp(40px, 7vw, 78px)',
+            lineHeight: 0.98,
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          {headlineLines.map((line, lineIdx) => (
+            <span key={lineIdx} className="block overflow-hidden">
+              {line.map((w, i) => (
+                <span
+                  key={`${lineIdx}-${i}`}
+                  data-word
+                  className="inline-block"
+                  style={{
+                    marginRight: i === line.length - 1 ? 0 : '0.22em',
+                    fontStyle: w.italic ? 'italic' : 'normal',
+                    willChange: 'transform, clip-path',
+                  }}
+                >
+                  {w.text}
+                </span>
+              ))}
+            </span>
+          ))}
+        </h1>
+
+        {/* Subline */}
+        <p
+          ref={sublineRef}
+          className="font-sans mb-8 md:mb-12 text-bone"
+          style={{
+            fontSize: 'clamp(15px, 1.25vw, 19px)',
+            lineHeight: 1.65,
+            maxWidth: 460,
+            fontWeight: 300,
+            opacity: 0,
+          }}
+        >
+          Relojes mecánicos de edición limitada, hechos a mano en Buenos Aires.
+          <span className="block mt-1 text-bone/50">
+            Máximo 50 unidades por modelo · Movimiento automático suizo.
+          </span>
+        </p>
+
+        {/* CTAs — stack vertical en mobile, horizontal en md+ */}
+        <div
+          ref={ctasRef}
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-12 md:mb-16 w-full"
+        >
+          <MagneticButton href="#modelos" variant="primary">
+            Ver los relojes
+            <ArrowRight className="btn-arrow" />
+          </MagneticButton>
+
+          <MagneticButton href="#edicion-limitada" variant="secondary">
+            Reservar un lugar
+          </MagneticButton>
+        </div>
+
+        {/* Meta */}
+        <div
+          ref={metaRef}
+          className="flex flex-wrap gap-x-8 sm:gap-x-10 gap-y-4"
+          style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+        >
+          {[
+            ['01', 'Modelos', '3'],
+            ['02', 'Unidades', '≤ 50'],
+            ['03', 'Desde', 'USD 2.800'],
+          ].map(([index, label, value]) => (
+            <div
+              key={label}
+              data-meta-item
+              className="flex flex-col gap-1.5 pl-4"
+              style={{
+                borderLeft: '1px solid rgba(0, 255, 136, 0.35)',
+                opacity: 0,
+              }}
+            >
+              <span className="font-mono text-seiko" style={{ fontSize: 10 }}>
+                {index}
+              </span>
+              <span className="font-mono text-bone/40">{label}</span>
+              <span
+                className="font-sans text-bone"
+                style={{ fontSize: 14, letterSpacing: '0.06em', fontWeight: 500 }}
+              >
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scroll hint — solo desktop */}
+      <div
+        ref={scrollHintRef}
+        className="absolute hidden md:flex flex-col items-center gap-3 pointer-events-none"
+        style={{
+          zIndex: 3,
+          bottom: '40px',
+          right: 'clamp(24px, 4vw, 64px)',
+          opacity: 0,
+        }}
+      >
+        <span
+          className="font-mono text-bone/50"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.5em',
+            textTransform: 'uppercase',
+            writingMode: 'vertical-rl',
+          }}
+        >
+          Scroll
+        </span>
+        <div
+          ref={scrollLineRef}
+          style={{
+            width: 1,
+            height: 56,
+            background: 'linear-gradient(180deg, #00FF88 0%, rgba(0, 255, 136,0) 100%)',
+            transformOrigin: 'top',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function ArrowRight({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width={14}
+      height={14}
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M1 7h12m0 0L8 2m5 5l-5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}

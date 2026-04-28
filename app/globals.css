@@ -1,0 +1,458 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Tokens CSS — OBSIDIAN ──────────────────────────────────────────── */
+:root {
+  /* Colores base */
+  --color-obsidian-black: #000000;
+  --color-obsidian-deep:  #080808;
+  --color-obsidian-warm:  #0A0F0A;
+  --color-bone:           #F0F7F0;
+  --color-bone-pale:      #F5FAF5;
+
+  /* Acento principal — verde brillante (futurista) */
+  --color-seiko:          #00FF88;
+  --color-seiko-dark:     #00CC6A;
+  --color-seiko-deep:     #00994F;
+  --color-seiko-glow:     rgba(0, 255, 136, 0.35);
+
+  /* Alias gold → verde (compat con utilidades existentes) */
+  --color-gold-matte:     #00FF88;
+  --color-gold-dark:      #00CC6A;
+  --color-gold-light:     #00E5A0;
+
+  /* Tipografía — Space Grotesk como display (en lugar de Fraunces) */
+  --font-serif:   var(--font-space-grotesk), system-ui, sans-serif;
+  --font-sans:    var(--font-space-grotesk), var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Escala tipográfica fluid (viewport 320px → 1440px) */
+  --text-display:    clamp(5rem,    4.286rem + 3.571vw, 7.5rem);
+  --text-hero:       clamp(3.5rem,  3.071rem + 2.143vw, 5rem);
+  --text-section:    clamp(2.5rem,  2.214rem + 1.429vw, 3.5rem);
+  --text-model-name: clamp(2rem,    1.714rem + 1.429vw, 3rem);
+  --text-body-large: clamp(1.25rem, 1.179rem + 0.357vw, 1.5rem);
+  --text-body:       clamp(1rem,    0.964rem + 0.179vw, 1.125rem);
+  --text-specs:      clamp(0.8125rem, 0.795rem + 0.089vw, 0.875rem);
+  --text-label:      clamp(0.6875rem, 0.670rem + 0.089vw, 0.75rem);
+
+  /* Line heights */
+  --leading-tight:   1.05;
+  --leading-snug:    1.15;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.7;
+
+  /* Espaciado */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-30: 120px;
+  --space-section:        120px;
+  --space-section-mobile: 80px;
+
+  /* Easings OBSIDIAN */
+  --ease-obsidian:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-obsidian-in: cubic-bezier(0.7, 0, 0.84, 0);
+
+  /* Duraciones */
+  --duration-instant: 100ms;
+  --duration-fast:    200ms;
+  --duration-base:    300ms;
+  --duration-slow:    600ms;
+  --duration-slower:  1200ms;
+  --duration-entry:   1400ms;
+
+  /* Z-index */
+  --z-base:    0;
+  --z-canvas:  10;
+  --z-content: 20;
+  --z-nav:     100;
+  --z-modal:   200;
+}
+
+/* ─── Reset base ─────────────────────────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    /* Lenis maneja el smooth scroll — aquí queda auto para no interferir */
+    scroll-behavior: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-obsidian-black);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--leading-normal);
+    overscroll-behavior-y: none;
+    /* Cursor custom activo — el cursor nativo se oculta en desktop */
+    @media (pointer: fine) {
+      cursor: none;
+    }
+  }
+
+  /* Links sin decoración por defecto — los componentes los estilizan */
+  a {
+    color: inherit;
+    text-decoration: none;
+    @media (pointer: fine) {
+      cursor: none;
+    }
+  }
+
+  /* Botones sin estilos por defecto */
+  button {
+    background: none;
+    border: none;
+    font-family: inherit;
+    @media (pointer: fine) {
+      cursor: none;
+    }
+  }
+
+  /* Imágenes responsivas por defecto */
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Inputs sin outline nativo — los componentes manejan el focus */
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    outline: none;
+  }
+}
+
+/* ─── Utilidades custom ──────────────────────────────────────────────── */
+@layer utilities {
+  /* Texto con gradiente verde Seiko — acento principal */
+  .text-seiko-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--color-seiko-dark) 0%,
+      var(--color-seiko)      50%,
+      #7FE8BC                 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Texto con gradiente dorado — acento secundario */
+  .text-gold-gradient {
+    background: linear-gradient(
+      135deg,
+      var(--color-gold-matte) 0%,
+      var(--color-gold-light) 50%,
+      var(--color-gold-dark)  100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow verde — para acentos, botones, líneas */
+  .shadow-seiko-glow {
+    box-shadow:
+      0 0 0 1px rgba(63, 217, 151, 0.3),
+      0 0 24px rgba(63, 217, 151, 0.25),
+      0 0 60px rgba(63, 217, 151, 0.08);
+  }
+
+  /* Noise sutil — le da textura al fondo negro sin romper performance */
+  .bg-noise {
+    position: relative;
+  }
+  .bg-noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Canvas Three.js — base común para todas las escenas */
+  .canvas-3d {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-obsidian-deep);
+  }
+
+  /* Separador dorado corto — decorativo, no full-width */
+  .divider-gold {
+    display: block;
+    width: 48px;
+    height: 1px;
+    background-color: var(--color-obsidian-warm);
+  }
+
+  /* Scroll horizontal — ocultar scrollbar en la sección Modelos */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* will-change — solo aplicar a elementos que realmente animan */
+  .will-change-transform {
+    will-change: transform;
+  }
+  .will-change-opacity {
+    will-change: opacity;
+  }
+}
+
+/* ─── Formulario — estilos globales (sección Contacto) ──────────────── */
+@layer components {
+  .form-field {
+    position: relative;
+    margin-bottom: var(--space-8);
+  }
+
+  .form-label {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-obsidian-warm);
+    margin-bottom: var(--space-3);
+    transition: color var(--duration-base) var(--ease-obsidian);
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-obsidian-warm);
+    border-radius: 0;
+    padding: 12px 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: 300;
+    color: var(--color-bone);
+    outline: none;
+    transition: border-color var(--duration-base) var(--ease-obsidian);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .form-field:focus-within .form-label {
+    color: var(--color-gold-matte);
+  }
+
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    border-bottom-color: var(--color-gold-matte);
+  }
+
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: var(--color-obsidian-warm);
+    font-weight: 300;
+  }
+
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232A2A2A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    padding-right: 20px;
+    cursor: pointer;
+  }
+
+  .form-select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300FF88' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .form-select option {
+    background: var(--color-obsidian-black);
+    color: var(--color-bone);
+  }
+
+  .form-textarea {
+    resize: none;
+    min-height: 80px;
+  }
+}
+
+/* ─── prefers-reduced-motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Three.js canvas: la rotación se desactiva via JS — ver SmoothScrollProvider */
+}
+
+/* ─── Custom cursor — hide system cursor on hoverable, fine-pointer devices ─ */
+@media (hover: hover) and (pointer: fine) {
+  html.custom-cursor-active,
+  html.custom-cursor-active * {
+    cursor: none !important;
+  }
+}
+
+/* ─── Botones premium — OBSIDIAN ─────────────────────────────────────── */
+@layer components {
+  .btn-obsidian {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 16px 34px;
+    border-radius: 2px;
+    isolation: isolate;
+    overflow: hidden;
+    transition:
+      color 0.4s var(--ease-obsidian),
+      transform 0.5s var(--ease-obsidian),
+      box-shadow 0.5s var(--ease-obsidian);
+    white-space: nowrap;
+    cursor: inherit;
+  }
+
+  .btn-obsidian::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    transform: translateY(100%);
+    transition: transform 0.5s var(--ease-obsidian);
+  }
+
+  /* Primary — verde Seiko sólido */
+  .btn-primary {
+    background-color: var(--color-seiko);
+    color: var(--color-obsidian-black);
+    box-shadow:
+      0 0 0 1px rgba(63, 217, 151, 0.45),
+      0 10px 40px -8px rgba(63, 217, 151, 0.45);
+  }
+  .btn-primary::before {
+    background: linear-gradient(180deg, #7FE8BC 0%, var(--color-seiko) 100%);
+  }
+  .btn-primary:hover {
+    color: var(--color-obsidian-black);
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(127, 232, 188, 0.6),
+      0 14px 50px -6px rgba(63, 217, 151, 0.55);
+  }
+  .btn-primary:hover::before {
+    transform: translateY(0);
+  }
+
+  /* Secondary — ghost con borde sutil */
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--color-bone);
+    box-shadow: inset 0 0 0 1px rgba(240, 247, 240, 0.2);
+  }
+  .btn-secondary::before {
+    background: linear-gradient(180deg, rgba(63, 217, 151, 0.12) 0%, rgba(63, 217, 151, 0.02) 100%);
+  }
+  .btn-secondary:hover {
+    color: var(--color-seiko);
+    transform: translateY(-2px);
+    box-shadow: inset 0 0 0 1px rgba(63, 217, 151, 0.6),
+      0 10px 30px -10px rgba(63, 217, 151, 0.35);
+  }
+  .btn-secondary:hover::before {
+    transform: translateY(0);
+  }
+
+  .btn-obsidian .btn-arrow {
+    display: inline-block;
+    transition: transform 0.4s var(--ease-obsidian);
+    will-change: transform;
+  }
+  .btn-obsidian:hover .btn-arrow {
+    transform: translateX(4px);
+  }
+
+  /* Nav link underline animado */
+  .nav-link {
+    position: relative;
+    transition: color 0.3s var(--ease-obsidian);
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 100%;
+    height: 1px;
+    background-color: var(--color-seiko);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.5s var(--ease-obsidian);
+  }
+  .nav-link:hover {
+    color: var(--color-bone);
+  }
+  .nav-link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+/* ─── Animaciones decorativas ────────────────────────────────────────── */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes pulse-seiko {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+.animate-float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+.animate-pulse-seiko {
+  animation: pulse-seiko 2.4s ease-in-out infinite;
+}
