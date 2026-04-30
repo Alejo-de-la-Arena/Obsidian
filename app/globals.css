@@ -413,6 +413,18 @@
     transform: translateX(4px);
   }
 
+  /* Variante full-width en mobile (≤640px) — usado por MagneticButton */
+  .btn-obsidian.magnetic-btn-full {
+    display: flex;
+    width: 100%;
+  }
+  @media (min-width: 640px) {
+    .btn-obsidian.magnetic-btn-full {
+      display: inline-flex;
+      width: auto;
+    }
+  }
+
   /* Nav link underline animado */
   .nav-link {
     position: relative;

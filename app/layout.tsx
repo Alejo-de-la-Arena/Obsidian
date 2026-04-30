@@ -1,31 +1,25 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { GeistSans } from 'geist/font/sans'
 import { SmoothScrollProvider } from '@/components/layout/SmoothScrollProvider'
 import { Nav } from '@/components/nav/Nav'
 import { CustomCursor } from '@/components/ui/CustomCursor'
 import './globals.css'
 
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-  display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-})
-
+// Solo cargar weights realmente usados: 500 (subheadlines/medium) y 700 (display).
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-space-grotesk',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['500', '700'],
 })
 
+// Mono solo en 500 — labels y eyebrows.
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
-  weight: ['400', '500'],
+  weight: ['500'],
 })
 
 export const metadata: Metadata = {
@@ -80,7 +74,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${GeistSans.variable}`}
+      className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} ${GeistSans.variable}`}
     >
       <body className="bg-obsidian-black text-bone antialiased">
         <CustomCursor />

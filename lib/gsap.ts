@@ -7,7 +7,10 @@ import { Flip } from 'gsap/Flip'
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, Flip)
 
-  // Defaults globales OBSIDIAN — expo.out para entradas lentas y cinematográficas
+  // Performance: limita callbacks de ScrollTrigger durante scroll rápido.
+  ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true })
+
+  // Defaults globales OBSIDIAN
   gsap.defaults({
     ease: 'expo.out',
     duration: 1,

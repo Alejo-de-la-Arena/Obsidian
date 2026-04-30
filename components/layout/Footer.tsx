@@ -40,8 +40,21 @@ export function Footer() {
               color: 'rgba(240, 247, 240, 0.4)',
             }}
           >
-            Buenos Aires, Argentina · MMXXVI
+            Buenos Aires, Argentina
           </span>
+          <a
+            href="#"
+            data-cursor="button"
+            className="font-sans mt-3 transition-opacity duration-200 hover:opacity-100"
+            style={{
+              fontSize: 11,
+              letterSpacing: '0.05em',
+              color: '#00FF88',
+              opacity: 0.6,
+            }}
+          >
+            Desarrollado por VYZON
+          </a>
         </div>
 
         {/* Centro — links */}

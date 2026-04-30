@@ -1,254 +1,252 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import { useEffect, useRef } from 'react'
+import { useGSAP } from '@gsap/react'
+import { gsap } from '@/lib/gsap'
 
-export type ModelLighting = {
-  // Color de la luz principal direccional.
-  keyColor: string
-  // Intensidad de la luz principal.
-  keyIntensity: number
-  // Intensidad de la luz ambiente.
-  ambient: number
-  // Color y intensidad de la rim/point light de relleno.
-  rimColor: string
-  rimIntensity: number
-  rimPosition: [number, number, number]
-  // Intensidad del environment map (PBR reflections).
-  envIntensity?: number
-  // Tone mapping exposure.
-  exposure?: number
+export type ModelVariant = 'NOIR' | 'ALBA' | 'FORGE'
+
+const GLOW: Record<ModelVariant, string> = {
+  NOIR: '#00FF88',
+  ALBA: '#D4AA60',
+  FORGE: '#4488FF',
 }
 
 type Props = {
-  lighting: ModelLighting
-  active: boolean
+  variant: ModelVariant
+  active?: boolean
   className?: string
 }
 
 /**
- * ModelCanvas — pequeña escena Three.js dedicada a renderizar el reloj
- * con una iluminación específica. Lazy-init: el WebGL context y el GLB
- * sólo se cargan cuando `active` pasa a true por primera vez.
+ * Placeholder visual del reloj — CERO Three.js, CERO WebGL.
  *
- * Cuando `active === false` el RAF loop se pausa y la GPU descansa.
+ * Genera un disco estilizado (anillos concéntricos + 12 índices + nombre
+ * fantasma del modelo) con un glow de color por variante. Las animaciones
+ * son CSS (rotación + pulse) y un GSAP reveal único `once: true`.
  */
-export function ModelCanvas({ lighting, active, className }: Props) {
-  const mountRef = useRef<HTMLDivElement>(null)
-  const [shouldInit, setShouldInit] = useState(false)
-  const activeRef = useRef(active)
-  activeRef.current = active
+export function ModelCanvas({ variant, className }: Props) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const glowRef = useRef<HTMLDivElement>(null)
+  const ringRef = useRef<HTMLDivElement>(null)
+  const indicesRef = useRef<HTMLDivElement>(null)
 
-  // Lazy: la primera vez que active === true marcamos shouldInit.
-  useEffect(() => {
-    if (active) setShouldInit(true)
-  }, [active])
+  useGSAP(
+    () => {
+      const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const root = rootRef.current
+      if (!root) return
 
-  useEffect(() => {
-    if (!shouldInit) return
-    const mount = mountRef.current
-    if (!mount) return
+      // Reveal único de los índices (stagger circular).
+      const ticks = indicesRef.current?.querySelectorAll<HTMLElement>('[data-tick]') ?? []
+      gsap.fromTo(
+        ticks,
+        { opacity: 0, scale: 0.4 },
+        {
+          opacity: 1,
+          scale: 1,
+          stagger: noMotion ? 0 : 0.05,
+          duration: noMotion ? 0.01 : 0.6,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: root, start: 'top 80%', once: true, fastScrollEnd: true },
+        },
+      )
 
-    const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance',
-    })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.outputColorSpace = THREE.SRGBColorSpace
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = lighting.exposure ?? 1.0
-    renderer.setClearColor(0x000000, 0)
-    renderer.setSize(mount.clientWidth || 1, mount.clientHeight || 1, false)
-
-    const canvas = renderer.domElement
-    canvas.style.position = 'absolute'
-    canvas.style.inset = '0'
-    canvas.style.width = '100%'
-    canvas.style.height = '100%'
-    canvas.style.pointerEvents = 'none'
-    canvas.style.display = 'block'
-    mount.appendChild(canvas)
-
-    const scene = new THREE.Scene()
-
-    const pmrem = new THREE.PMREMGenerator(renderer)
-    pmrem.compileEquirectangularShader()
-    const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
-    scene.environment = envTex
-    scene.environmentIntensity = lighting.envIntensity ?? 1
-
-    const aspect = (mount.clientWidth || 1) / (mount.clientHeight || 1)
-    const camera = new THREE.PerspectiveCamera(36, aspect, 0.1, 100)
-    camera.position.set(0, 0.1, 6.5)
-    camera.lookAt(0, 0, 0)
-
-    const ambient = new THREE.AmbientLight('#FFFFFF', lighting.ambient)
-    scene.add(ambient)
-
-    const key = new THREE.DirectionalLight(lighting.keyColor, lighting.keyIntensity)
-    key.position.set(3, 5, 4)
-    scene.add(key)
-
-    const rim = new THREE.PointLight(lighting.rimColor, lighting.rimIntensity, 14, 1.5)
-    rim.position.set(...lighting.rimPosition)
-    scene.add(rim)
-
-    const watchPivot = new THREE.Group()
-    const watchSpin = new THREE.Group()
-    watchPivot.add(watchSpin)
-    scene.add(watchPivot)
-
-    let modelReady = false
-    let mouseTargetX = 0
-    let mouseTargetY = 0
-    const maxRot = 0.18
-
-    const loader = new GLTFLoader()
-    loader.load(
-      '/models/watch.glb',
-      (gltf) => {
-        const root = gltf.scene
-        const box = new THREE.Box3().setFromObject(root)
-        const size = box.getSize(new THREE.Vector3())
-        const center = box.getCenter(new THREE.Vector3())
-        root.position.sub(center)
-
-        const targetSize = 2.4
-        const scale = targetSize / (Math.max(size.x, size.y, size.z) || 1)
-        root.scale.setScalar(scale)
-
-        watchSpin.add(root)
-        modelReady = true
-      },
-      undefined,
-      (err) => console.error('[ModelCanvas] GLTF load failed', err),
-    )
-
-    const onMouseMove = (e: MouseEvent) => {
-      const rect = mount.getBoundingClientRect()
-      if (
-        e.clientX < rect.left ||
-        e.clientX > rect.right ||
-        e.clientY < rect.top ||
-        e.clientY > rect.bottom
-      ) {
-        mouseTargetX = 0
-        mouseTargetY = 0
-        return
+      // Pulse del glow — loop ligero (opacity only, sin layout).
+      if (!noMotion && glowRef.current) {
+        gsap.to(glowRef.current, {
+          opacity: 0.32,
+          duration: 2.4,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+        })
       }
-      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1
-      const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1
-      mouseTargetY = nx * maxRot
-      mouseTargetX = ny * maxRot * 0.6
-    }
-    window.addEventListener('mousemove', onMouseMove, { passive: true })
 
-    const applySize = () => {
-      const w = mount.clientWidth || 1
-      const h = mount.clientHeight || 1
-      renderer.setSize(w, h, false)
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-    }
-    applySize()
-    const ro = new ResizeObserver(applySize)
-    ro.observe(mount)
-
-    const clock = new THREE.Clock()
-    let rafId = 0
-    const tick = () => {
-      rafId = requestAnimationFrame(tick)
-      if (!activeRef.current) return
-      const t = clock.getElapsedTime()
-      if (modelReady) {
-        watchPivot.position.y = Math.sin(t * 0.6) * 0.06
-        if (!noMotion) {
-          watchPivot.rotation.x += (mouseTargetX - watchPivot.rotation.x) * 0.05
-          watchPivot.rotation.y += (mouseTargetY - watchPivot.rotation.y) * 0.05
-        }
+      // Rotación lenta del anillo exterior (CSS-driven via gsap, GPU only).
+      if (!noMotion && ringRef.current) {
+        gsap.to(ringRef.current, {
+          rotation: 360,
+          duration: 60,
+          ease: 'none',
+          repeat: -1,
+          transformOrigin: 'center center',
+        })
       }
-      renderer.render(scene, camera)
-    }
-    tick()
+    },
+    { scope: rootRef },
+  )
 
+  // Hover: intensifica el glow + leve scale (sin tocar layout, transform only).
+  useEffect(() => {
+    const root = rootRef.current
+    const glow = glowRef.current
+    if (!root || !glow) return
+    const onEnter = () => {
+      gsap.to(root, { scale: 1.03, duration: 0.4, ease: 'power3.out' })
+      gsap.to(glow, { opacity: 0.42, duration: 0.4, ease: 'power3.out', overwrite: 'auto' })
+    }
+    const onLeave = () => {
+      gsap.to(root, { scale: 1, duration: 0.4, ease: 'power3.out' })
+      // Vuelve al pulse loop — kill local tween dejando que el repeat-yoyo siga.
+      gsap.to(glow, { opacity: 0.18, duration: 0.4, ease: 'power3.out', overwrite: 'auto' })
+    }
+    root.addEventListener('mouseenter', onEnter)
+    root.addEventListener('mouseleave', onLeave)
     return () => {
-      cancelAnimationFrame(rafId)
-      ro.disconnect()
-      window.removeEventListener('mousemove', onMouseMove)
-      scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
-          obj.geometry?.dispose()
-          const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
-          mats.forEach((m) => {
-            if (!m) return
-            const any = m as THREE.Material & {
-              map?: THREE.Texture | null
-              normalMap?: THREE.Texture | null
-              roughnessMap?: THREE.Texture | null
-              metalnessMap?: THREE.Texture | null
-              emissiveMap?: THREE.Texture | null
-              aoMap?: THREE.Texture | null
-            }
-            any.map?.dispose()
-            any.normalMap?.dispose()
-            any.roughnessMap?.dispose()
-            any.metalnessMap?.dispose()
-            any.emissiveMap?.dispose()
-            any.aoMap?.dispose()
-            m.dispose()
-          })
-        }
-      })
-      envTex.dispose()
-      pmrem.dispose()
-      renderer.dispose()
-      if (mount.contains(canvas)) mount.removeChild(canvas)
+      root.removeEventListener('mouseenter', onEnter)
+      root.removeEventListener('mouseleave', onLeave)
     }
-  }, [shouldInit, lighting])
+  }, [])
+
+  const glowColor = GLOW[variant]
 
   return (
-    <div
-      ref={mountRef}
-      aria-hidden
-      className={className ?? 'absolute inset-0'}
-    />
+    <div className={className ?? 'absolute inset-0 flex items-center justify-center'}>
+      <div
+        ref={rootRef}
+        className="relative w-full mx-auto"
+        style={{
+          aspectRatio: '1 / 1',
+          maxWidth: 420,
+          willChange: 'transform',
+        }}
+      >
+        {/* Glow de fondo */}
+        <div
+          ref={glowRef}
+          aria-hidden
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`,
+            opacity: 0.18,
+            filter: 'blur(80px)',
+            willChange: 'opacity',
+          }}
+        />
+
+        {/* Anillo exterior rotando */}
+        <div
+          ref={ringRef}
+          aria-hidden
+          className="absolute"
+          style={{
+            inset: '8%',
+            borderRadius: '50%',
+            border: '1px solid rgba(0, 255, 136, 0.3)',
+            willChange: 'transform',
+          }}
+        />
+
+        {/* Anillo medio */}
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            inset: '14%',
+            borderRadius: '50%',
+            border: '1px solid rgba(0, 255, 136, 0.15)',
+          }}
+        />
+
+        {/* Cara central — fondo oscuro + nombre fantasma */}
+        <div
+          aria-hidden
+          className="absolute flex items-center justify-center pointer-events-none"
+          style={{
+            inset: '20%',
+            borderRadius: '50%',
+            background: 'rgba(8, 8, 8, 0.85)',
+            border: '1px solid rgba(0, 255, 136, 0.1)',
+            boxShadow: 'inset 0 0 60px rgba(0, 0, 0, 0.6)',
+          }}
+        >
+          <span
+            className="font-serif"
+            style={{
+              fontSize: 'clamp(28px, 4vw, 44px)',
+              color: 'rgba(240, 247, 240, 0.08)',
+              letterSpacing: '0.3em',
+              fontWeight: 700,
+            }}
+          >
+            {variant}
+          </span>
+        </div>
+
+        {/* 12 índices */}
+        <div ref={indicesRef} aria-hidden className="absolute inset-0 pointer-events-none">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span
+              key={i}
+              data-tick
+              className="absolute block"
+              style={{
+                top: '50%',
+                left: '50%',
+                width: 2,
+                height: i % 3 === 0 ? 12 : 8,
+                backgroundColor:
+                  i % 3 === 0 ? 'rgba(0, 255, 136, 0.7)' : 'rgba(0, 255, 136, 0.35)',
+                transformOrigin: 'center 0',
+                transform: `translate(-50%, 0) rotate(${i * 30}deg) translateY(-46%)`,
+                opacity: 0,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Aguja decorativa central */}
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            top: '50%',
+            left: '50%',
+            width: 2,
+            height: '32%',
+            backgroundColor: 'rgba(0, 255, 136, 0.55)',
+            transformOrigin: 'center bottom',
+            transform: 'translate(-50%, -100%) rotate(-20deg)',
+            borderRadius: 1,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute pointer-events-none"
+          style={{
+            top: '50%',
+            left: '50%',
+            width: 2,
+            height: '24%',
+            backgroundColor: 'rgba(240, 247, 240, 0.6)',
+            transformOrigin: 'center bottom',
+            transform: 'translate(-50%, -100%) rotate(48deg)',
+            borderRadius: 1,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute rounded-full"
+          style={{
+            top: '50%',
+            left: '50%',
+            width: 8,
+            height: 8,
+            backgroundColor: '#00FF88',
+            transform: 'translate(-50%, -50%)',
+            boxShadow: '0 0 12px rgba(0, 255, 136, 0.6)',
+          }}
+        />
+      </div>
+    </div>
   )
 }
 
-export const MODEL_LIGHTING: Record<'NOIR' | 'ALBA' | 'FORGE', ModelLighting> = {
-  NOIR: {
-    keyColor: '#e8eeff',
-    keyIntensity: 1.6,
-    ambient: 0.15,
-    rimColor: '#ffffff',
-    rimIntensity: 2.6,
-    rimPosition: [-2, 1.5, -3],
-    envIntensity: 0.85,
-    exposure: 0.95,
-  },
-  ALBA: {
-    keyColor: '#fff5e6',
-    keyIntensity: 1.4,
-    ambient: 0.4,
-    rimColor: '#ffd089',
-    rimIntensity: 2.2,
-    rimPosition: [3, 1.5, 2],
-    envIntensity: 1.1,
-    exposure: 1.15,
-  },
-  FORGE: {
-    keyColor: '#f0f0f0',
-    keyIntensity: 1.2,
-    ambient: 0.2,
-    rimColor: '#4488ff',
-    rimIntensity: 1.6,
-    rimPosition: [2.5, 0.5, -2.5],
-    envIntensity: 0.95,
-    exposure: 1.0,
-  },
+// Compat: la API anterior exportaba esto. Algunas secciones aún
+// importan estos símbolos — devolvemos no-ops/identidad para que
+// el resto del código no rompa hasta que se migre.
+export const MODEL_LIGHTING = {} as const
+export function getGlbUrl(_v: ModelVariant): string {
+  return ''
 }

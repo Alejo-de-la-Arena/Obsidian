@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
-import { ModelCanvas, MODEL_LIGHTING } from '@/components/models/ModelCanvas'
+import { ModelCanvas } from '@/components/models/ModelCanvas'
 
 type ModelKey = 'NOIR' | 'ALBA' | 'FORGE'
 
@@ -71,19 +71,9 @@ export function ModelosSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const [activeIdx, setActiveIdx] = useState(0)
-  const [isDesktop, setIsDesktop] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)')
-    const update = () => setIsDesktop(mq.matches)
-    update()
-    mq.addEventListener('change', update)
-    return () => mq.removeEventListener('change', update)
-  }, [])
 
   useGSAP(
     () => {
-      if (!isDesktop) return
       const section = sectionRef.current
       const track = trackRef.current
       if (!section || !track) return
@@ -98,7 +88,8 @@ export function ModelosSection() {
           trigger: section,
           start: 'top top',
           end: () => `+=${distance()}`,
-          scrub: noMotion ? 0 : 1,
+          scrub: noMotion ? 0 : 0.3,
+          fastScrollEnd: true,
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
@@ -120,79 +111,15 @@ export function ModelosSection() {
         tween.kill()
       }
     },
-    { scope: sectionRef, dependencies: [isDesktop] },
+    { scope: sectionRef },
   )
-
-  // Mobile: detectar el panel visible para activar/desactivar canvases.
-  useEffect(() => {
-    if (isDesktop) return
-    const panels = sectionRef.current?.querySelectorAll<HTMLElement>('[data-model-panel]')
-    if (!panels || !panels.length) return
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
-            const idx = Number(entry.target.getAttribute('data-idx'))
-            if (!Number.isNaN(idx)) setActiveIdx(idx)
-          }
-        })
-      },
-      { threshold: [0.4, 0.6] },
-    )
-    panels.forEach((p) => io.observe(p))
-    return () => io.disconnect()
-  }, [isDesktop])
-
-  if (!isDesktop) {
-    return (
-      <section
-        ref={sectionRef}
-        id="modelos"
-        className="relative w-full"
-        style={{ backgroundColor: '#0A0A0A' }}
-        aria-label="Modelos OBSIDIAN"
-      >
-        {MODELS.map((m, i) => (
-          <div
-            key={m.key}
-            data-model-panel
-            data-idx={i}
-            className="relative w-full flex flex-col"
-            style={{
-              paddingTop: 'clamp(56px, 9vh, 96px)',
-              paddingBottom: 'clamp(56px, 9vh, 96px)',
-            }}
-          >
-            <div
-              className="relative w-full"
-              style={{ height: '50vw', maxHeight: 360, minHeight: 240 }}
-            >
-              <ModelCanvas
-                lighting={MODEL_LIGHTING[m.key]}
-                active={activeIdx === i}
-                className="absolute inset-0"
-              />
-            </div>
-            <ModelInfo data={m} />
-            {i < MODELS.length - 1 && (
-              <div
-                className="mx-auto mt-12"
-                aria-hidden
-                style={{ width: 48, height: 1, backgroundColor: '#00FF88', opacity: 0.5 }}
-              />
-            )}
-          </div>
-        ))}
-      </section>
-    )
-  }
 
   return (
     <section
       ref={sectionRef}
       id="modelos"
       className="relative w-full overflow-hidden"
-      style={{ backgroundColor: '#0A0A0A', height: '100vh' }}
+      style={{ backgroundColor: '#0A0A0A', height: '100svh' }}
       aria-label="Modelos OBSIDIAN"
     >
       <div
@@ -203,14 +130,14 @@ export function ModelosSection() {
         {MODELS.map((m, i) => (
           <article
             key={m.key}
-            className="grid grid-cols-[55fr_45fr] items-center"
-            style={{ width: '100vw', height: '100vh' }}
+            className="grid grid-rows-[42vh_1fr] lg:grid-rows-1 lg:grid-cols-[55fr_45fr] items-center"
+            style={{ width: '100vw', height: '100svh' }}
           >
             <div className="relative w-full h-full">
               <ModelCanvas
-                lighting={MODEL_LIGHTING[m.key]}
+                variant={m.key}
                 active={activeIdx === i}
-                className="absolute inset-0"
+                className="absolute inset-0 flex items-center justify-center"
               />
             </div>
             <ModelInfo data={m} />
@@ -221,7 +148,7 @@ export function ModelosSection() {
       {/* Indicador de progreso */}
       <div
         className="absolute flex items-center gap-3 pointer-events-none"
-        style={{ bottom: 36, left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}
+        style={{ bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 5 }}
       >
         {MODELS.map((m, i) => {
           const active = i === activeIdx
@@ -248,14 +175,16 @@ function ModelInfo({ data }: { data: ModelData }) {
     <div
       className="flex flex-col justify-center w-full"
       style={{
-        paddingLeft: 'clamp(24px, 6vw, 80px)',
-        paddingRight: 'clamp(24px, 6vw, 80px)',
-        paddingTop: 'clamp(32px, 6vh, 56px)',
-        paddingBottom: 'clamp(32px, 6vh, 56px)',
+        paddingLeft: 'clamp(20px, 6vw, 64px)',
+        paddingRight: 'clamp(20px, 6vw, 64px)',
+        paddingTop: 'clamp(16px, 3vh, 32px)',
+        paddingBottom: 'clamp(40px, 5vh, 32px)',
+        overflowY: 'auto',
+        maxHeight: '100%',
       }}
     >
       <p
-        className="font-mono mb-3"
+        className="font-mono mb-2 lg:mb-3"
         style={{
           fontSize: 11,
           letterSpacing: '0.4em',
@@ -269,7 +198,7 @@ function ModelInfo({ data }: { data: ModelData }) {
       <h3
         className="font-serif text-bone"
         style={{
-          fontSize: 'clamp(56px, 7vw, 96px)',
+          fontSize: 'clamp(40px, 12vw, 96px)',
           lineHeight: 1,
           fontWeight: 700,
           letterSpacing: '-0.02em',
@@ -279,9 +208,9 @@ function ModelInfo({ data }: { data: ModelData }) {
       </h3>
 
       <p
-        className="font-serif italic mt-3"
+        className="font-serif italic mt-2 lg:mt-3"
         style={{
-          fontSize: 'clamp(18px, 1.6vw, 22px)',
+          fontSize: 'clamp(16px, 1.6vw, 22px)',
           color: '#00FF88',
           opacity: 0.9,
         }}
@@ -291,16 +220,16 @@ function ModelInfo({ data }: { data: ModelData }) {
 
       <span
         aria-hidden
-        className="block my-7"
+        className="block my-4 lg:my-7"
         style={{ width: 48, height: 1, backgroundColor: 'rgba(0, 255, 136, 0.4)' }}
       />
 
       <p
         className="font-sans text-bone"
         style={{
-          fontSize: 'clamp(15px, 1.1vw, 18px)',
-          lineHeight: 1.7,
-          opacity: 0.65,
+          fontSize: 'clamp(14px, 1.1vw, 18px)',
+          lineHeight: 1.55,
+          opacity: 0.7,
           fontWeight: 300,
           maxWidth: 460,
         }}
@@ -309,8 +238,8 @@ function ModelInfo({ data }: { data: ModelData }) {
       </p>
 
       <div
-        className="grid grid-cols-2 gap-x-8 gap-y-5 mt-8 mb-10"
-        style={{ maxWidth: 460 }}
+        className="grid grid-cols-2 mt-4 lg:mt-6 mb-5 lg:mb-8"
+        style={{ maxWidth: 460, columnGap: 16, rowGap: 8 }}
       >
         {data.specs.map((s) => (
           <div key={s.label} className="flex flex-col gap-1">
@@ -327,7 +256,7 @@ function ModelInfo({ data }: { data: ModelData }) {
             </span>
             <span
               className="font-sans text-bone"
-              style={{ fontSize: 13, fontWeight: 500 }}
+              style={{ fontSize: 11, fontWeight: 500 }}
             >
               {s.value}
             </span>
@@ -335,13 +264,13 @@ function ModelInfo({ data }: { data: ModelData }) {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-center gap-4 lg:gap-6">
         <span
           className="font-serif"
           style={{
-            fontSize: 'clamp(28px, 2.4vw, 36px)',
+            fontSize: 'clamp(20px, 2vw, 28px)',
             color: '#00FF88',
-            fontWeight: 400,
+            fontWeight: 700,
           }}
         >
           {data.price}
@@ -357,7 +286,7 @@ function ModelInfo({ data }: { data: ModelData }) {
             fontSize: 11,
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
-            padding: '12px 24px',
+            padding: '11px 20px',
             fontWeight: 500,
           }}
         >

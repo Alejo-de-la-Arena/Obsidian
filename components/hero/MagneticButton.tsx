@@ -10,6 +10,8 @@ interface MagneticButtonProps {
   children: ReactNode
   /** Fuerza del efecto magnético (0-1). */
   strength?: number
+  /** Si true, ocupa el 100% del ancho en mobile (sm- breakpoint). */
+  fullWidthMobile?: boolean
 }
 
 /**
@@ -22,6 +24,7 @@ export function MagneticButton({
   variant,
   children,
   strength = 0.35,
+  fullWidthMobile = false,
 }: MagneticButtonProps) {
   const wrapRef = useRef<HTMLSpanElement>(null)
   const innerRef = useRef<HTMLAnchorElement>(null)
@@ -62,14 +65,16 @@ export function MagneticButton({
   return (
     <span
       ref={wrapRef}
-      className="inline-block"
+      className={fullWidthMobile ? 'block w-full sm:inline-block sm:w-auto' : 'inline-block'}
       style={{ padding: 8, margin: -8 }}
     >
       <Link
         ref={innerRef}
         href={href}
         data-cursor="button"
-        className={`btn-obsidian ${variant === 'primary' ? 'btn-primary' : 'btn-secondary'}`}
+        className={`btn-obsidian ${variant === 'primary' ? 'btn-primary' : 'btn-secondary'} ${
+          fullWidthMobile ? 'magnetic-btn-full' : ''
+        }`}
       >
         {children}
       </Link>

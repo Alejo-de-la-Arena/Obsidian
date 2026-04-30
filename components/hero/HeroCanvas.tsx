@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { gsap } from '@/lib/gsap'
+import { loadGltf } from '@/lib/gltfCache'
 
 /**
  * HeroCanvas — escena Three.js unificada.
@@ -117,7 +117,7 @@ export function HeroCanvas() {
       stencil: false,
       depth: true,
     })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.05
@@ -136,7 +136,8 @@ export function HeroCanvas() {
     // ─── Cámara ──────────────────────────────────────────────────────
     const aspect = (mount.clientWidth || 1) / (mount.clientHeight || 1)
     const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 100)
-    camera.position.set(0, 0.2, isMobile ? 12 : 7.5)
+    // Mobile: cámara más cerca para ver el reloj grande de fondo (z 6.5).
+    camera.position.set(0, 0.2, isMobile ? 6.5 : 7.5)
     camera.lookAt(0, 0, 0)
 
     // ─── Escena ──────────────────────────────────────────────────────
@@ -167,9 +168,9 @@ export function HeroCanvas() {
     const bgQuad = new THREE.Mesh(bgGeom, bgMat)
     bgQuad.frustumCulled = false
     bgQuad.renderOrder = -1
-    // En mobile el canvas vive al final del hero como elemento separado
-    // y debe ser transparente — el fondo lo da el body de la sección.
-    if (!isMobile) scene.add(bgQuad)
+    // El canvas vive de fondo en todos los dispositivos — el shader aporta
+    // la atmósfera (niebla verde) tanto en desktop como en mobile.
+    scene.add(bgQuad)
 
     // ─── 2. Partículas (~800 puntos flotantes) ───────────────────────
     const PARTICLE_COUNT = isMobile ? 350 : 800
@@ -224,7 +225,7 @@ export function HeroCanvas() {
       `,
     })
     const particles = new THREE.Points(pGeom, pMat)
-    if (!isMobile) scene.add(particles)
+    scene.add(particles)
 
     // ─── 3. Luces sutiles (complementan el environment map) ──────────
     const ambient = new THREE.AmbientLight('#FFFFFF', 0.7)
@@ -247,32 +248,32 @@ export function HeroCanvas() {
     watchPivot.add(watchSpin)
     scene.add(watchPivot)
 
-    // Posición lateral derecha. En mobile lo centramos.
+    // Posición: desktop a la derecha, mobile centrado y empujado hacia
+    // abajo para que actúe como fondo del bloque de texto sin chocar
+    // con el headline.
     const rightOffsetX = isMobile ? 0 : 2.0
-    watchPivot.position.set(rightOffsetX, 0, 0)
+    const baseY = isMobile ? -1.1 : 0
+    watchPivot.position.set(rightOffsetX, baseY, 0)
     // Cara del reloj de frente — sin tilt 3/4. El mouse da el sutil
     // parallax (±0.15 rad) sin nunca esconder la esfera.
     watchPivot.rotation.set(0, 0, 0)
 
     let modelReady = false
-    let loader: GLTFLoader | null = new GLTFLoader()
 
-    loader.load(
-      '/models/watch.glb',
-      (gltf) => {
-        const root = gltf.scene
-
+    loadGltf('/models/watch.glb')
+      .then((root) => {
         const box = new THREE.Box3().setFromObject(root)
         const size = box.getSize(new THREE.Vector3())
         const center = box.getCenter(new THREE.Vector3())
         root.position.sub(center)
 
-        const targetSize = 2.4
+        // En mobile el reloj actúa como fondo del hero — lo agrandamos
+        // para que llene visualmente la zona inferior del viewport.
+        const targetSize = isMobile ? 3.4 : 2.4
         const currentMax = Math.max(size.x, size.y, size.z) || 1
         const scale = targetSize / currentMax
         root.scale.setScalar(scale)
 
-        // Mejoramos levemente el entorno para resaltar metales.
         root.traverse((obj) => {
           if (obj instanceof THREE.Mesh) {
             obj.castShadow = false
@@ -284,8 +285,6 @@ export function HeroCanvas() {
         watchSpin.add(root)
         modelReady = true
 
-        // Entrada — solo translate-in lateral + fade del canvas. NUNCA
-        // rotamos en la entrada porque tapa la cara del reloj.
         if (!noMotion) {
           gsap.from(watchPivot.position, {
             x: rightOffsetX + 3,
@@ -298,12 +297,11 @@ export function HeroCanvas() {
             ease: 'power2.out',
           })
         }
-      },
-      undefined,
-      (err) => {
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
         console.error('[HeroCanvas] GLTF load failed:', err)
-      },
-    )
+      })
 
     // ─── Mouse parallax — único motor de rotación del reloj ─────────
     // Rango ±0.15 rad (~8.5°). El reloj nunca gira lo suficiente como
@@ -367,8 +365,8 @@ export function HeroCanvas() {
 
       if (modelReady) {
         if (!noMotion) {
-          // Floating vertical suave (respiración).
-          watchPivot.position.y = Math.sin(t * 0.6) * 0.08
+          // Floating vertical suave (respiración) sobre la baseY (mobile −1.1).
+          watchPivot.position.y = baseY + Math.sin(t * 0.6) * 0.08
           // Lerp hacia el target del mouse — la cara siempre visible.
           watchPivot.rotation.x += (targetRotX - watchPivot.rotation.x) * 0.05
           watchPivot.rotation.y += (targetRotY - watchPivot.rotation.y) * 0.05
@@ -419,7 +417,6 @@ export function HeroCanvas() {
       envTex.dispose()
       pmrem.dispose()
       renderer.dispose()
-      loader = null
 
       if (mount.contains(canvas)) mount.removeChild(canvas)
     }
@@ -429,7 +426,7 @@ export function HeroCanvas() {
     <div
       ref={mountRef}
       aria-hidden
-      className="relative w-full h-[340px] md:absolute md:inset-0 md:h-full order-last md:order-none"
+      className="absolute left-0 right-0 top-0 h-[100svh] md:h-full"
       style={{ zIndex: 1 }}
     />
   )

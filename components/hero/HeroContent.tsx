@@ -118,6 +118,33 @@ export function HeroContent() {
     { scope: containerRef },
   )
 
+  // Fallback de seguridad: si después de 3s algún elemento sigue con
+  // opacity 0 (porque el ref no quedó conectado o GSAP no corrió por
+  // SSR/strict mode), forzamos visibilidad para garantizar que el
+  // contenido del hero nunca quede invisible.
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      const targets: (HTMLElement | null)[] = [
+        statusRef.current,
+        eyebrowRef.current,
+        sublineRef.current,
+        scrollHintRef.current,
+      ]
+      if (ctasRef.current) targets.push(...Array.from(ctasRef.current.children) as HTMLElement[])
+      if (metaRef.current) {
+        targets.push(metaRef.current)
+        metaRef.current.querySelectorAll<HTMLElement>('[data-meta-item]').forEach((el) => targets.push(el))
+      }
+      targets.forEach((el) => {
+        if (el && getComputedStyle(el).opacity === '0') {
+          el.style.opacity = '1'
+          el.style.transform = 'none'
+        }
+      })
+    }, 3000)
+    return () => window.clearTimeout(id)
+  }, [])
+
   useEffect(() => {
     const st = ScrollTrigger.create({
       trigger: document.body,
@@ -158,19 +185,17 @@ export function HeroContent() {
       style={{ zIndex: 3 }}
     >
       <div
-        className="relative md:absolute pointer-events-auto flex flex-col"
+        className="relative md:absolute pointer-events-auto flex flex-col w-full pt-[clamp(72px,9vh,108px)] md:pt-[clamp(80px,14vh,140px)] pb-[clamp(28px,5vh,72px)] md:pb-[clamp(48px,10vh,96px)]"
         style={{
           paddingLeft: 'clamp(20px, 6vw, 96px)',
           paddingRight: 'clamp(20px, 6vw, 96px)',
-          paddingTop: 'clamp(80px, 14vh, 140px)',
-          paddingBottom: 'clamp(48px, 10vh, 96px)',
           maxWidth: 'min(680px, 100%)',
         }}
       >
         {/* Status pill — sobre el badge eyebrow, en flujo */}
         <div
           ref={statusRef}
-          className="flex items-center gap-2.5 font-mono mb-6"
+          className="flex items-center gap-2.5 font-mono mb-4 md:mb-6"
           style={{
             fontSize: 10,
             letterSpacing: '0.3em',
@@ -196,7 +221,7 @@ export function HeroContent() {
         </div>
 
         {/* Eyebrow línea + label */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-4 md:mb-6">
           <span
             ref={eyebrowLineRef}
             aria-hidden
@@ -228,16 +253,15 @@ export function HeroContent() {
         {/* H1 */}
         <h1
           ref={headlineRef}
-          className="font-serif mb-6 md:mb-8 text-bone"
+          className="font-serif mb-4 md:mb-8 text-bone leading-[1.08] md:leading-[1.1] pb-[0.1em] md:pb-[0.15em]"
           style={{
-            fontSize: 'clamp(40px, 7vw, 78px)',
-            lineHeight: 0.98,
+            fontSize: 'clamp(36px, 7vw, 78px)',
             fontWeight: 700,
             letterSpacing: '-0.02em',
           }}
         >
           {headlineLines.map((line, lineIdx) => (
-            <span key={lineIdx} className="block overflow-hidden">
+            <span key={lineIdx} className="block" style={{ overflow: 'visible' }}>
               {line.map((w, i) => (
                 <span
                   key={`${lineIdx}-${i}`}
@@ -246,6 +270,7 @@ export function HeroContent() {
                   style={{
                     marginRight: i === line.length - 1 ? 0 : '0.22em',
                     fontStyle: w.italic ? 'italic' : 'normal',
+                    paddingBottom: '0.08em',
                     willChange: 'transform, clip-path',
                   }}
                 >
@@ -259,10 +284,9 @@ export function HeroContent() {
         {/* Subline */}
         <p
           ref={sublineRef}
-          className="font-sans mb-8 md:mb-12 text-bone"
+          className="font-sans mb-6 md:mb-12 text-bone leading-[1.55] md:leading-[1.65]"
           style={{
-            fontSize: 'clamp(15px, 1.25vw, 19px)',
-            lineHeight: 1.65,
+            fontSize: 'clamp(14px, 1.25vw, 19px)',
             maxWidth: 460,
             fontWeight: 300,
             opacity: 0,
@@ -274,17 +298,17 @@ export function HeroContent() {
           </span>
         </p>
 
-        {/* CTAs — stack vertical en mobile, horizontal en md+ */}
+        {/* CTAs — stack vertical full-width en mobile, horizontal en sm+ */}
         <div
           ref={ctasRef}
-          className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-12 md:mb-16 w-full"
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-16 w-full"
         >
-          <MagneticButton href="#modelos" variant="primary">
+          <MagneticButton href="#modelos" variant="primary" fullWidthMobile>
             Ver los relojes
             <ArrowRight className="btn-arrow" />
           </MagneticButton>
 
-          <MagneticButton href="#edicion-limitada" variant="secondary">
+          <MagneticButton href="#edicion-limitada" variant="secondary" fullWidthMobile>
             Reservar un lugar
           </MagneticButton>
         </div>
@@ -292,7 +316,7 @@ export function HeroContent() {
         {/* Meta */}
         <div
           ref={metaRef}
-          className="flex flex-wrap gap-x-8 sm:gap-x-10 gap-y-4"
+          className="flex flex-wrap gap-x-6 sm:gap-x-10 gap-y-3 sm:gap-y-4"
           style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}
         >
           {[

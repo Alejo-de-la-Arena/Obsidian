@@ -15,7 +15,7 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-noise flex flex-col md:block"
+      className="relative w-full overflow-hidden bg-noise block"
       style={{
         minHeight: '100svh',
         backgroundColor: '#08090B',
@@ -24,13 +24,25 @@ export function Hero() {
     >
       <HeroCanvas />
 
-      {/* Overlay gradiente — solo en desktop (mobile no necesita por layout stack) */}
+      {/* Overlay desktop — degradado horizontal para legibilidad del texto a la izquierda */}
       <div
         className="absolute inset-0 pointer-events-none hidden md:block"
         style={{
           zIndex: 2,
           background:
             'linear-gradient(90deg, rgba(8,9,11,0.92) 0%, rgba(8,9,11,0.55) 35%, rgba(8,9,11,0) 60%, rgba(8,9,11,0.35) 100%)',
+        }}
+      />
+
+      {/* Overlay mobile — velo que oscurece el reloj de fondo para mantener legibilidad
+          de los textos. Doble gradiente: oscurece arriba y abajo, deja un halo central
+          alrededor del reloj. */}
+      <div
+        className="absolute inset-0 pointer-events-none md:hidden"
+        style={{
+          zIndex: 2,
+          background:
+            'linear-gradient(180deg, rgba(8,9,11,0.92) 0%, rgba(8,9,11,0.6) 30%, rgba(8,9,11,0.55) 65%, rgba(8,9,11,0.92) 100%)',
         }}
       />
 
