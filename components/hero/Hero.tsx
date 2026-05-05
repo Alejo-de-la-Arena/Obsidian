@@ -17,7 +17,8 @@ export function Hero() {
       id="hero"
       className="relative w-full overflow-hidden bg-noise block"
       style={{
-        minHeight: '100svh',
+        height: '100svh',
+        minHeight: 600,
         backgroundColor: '#08090B',
       }}
       aria-label="Hero OBSIDIAN"

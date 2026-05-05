@@ -321,6 +321,19 @@
   /* Three.js canvas: la rotación se desactiva via JS — ver SmoothScrollProvider */
 }
 
+/* ─── Hero animation fallback ────────────────────────────────────────── */
+/* Elementos animados por GSAP arrancan invisibles. Si GSAP no ejecuta
+   (SSR, error, prefers-reduced-motion sin handler), un setTimeout en el
+   componente fuerza opacity:1 a los 3s. Esto evita que el contenido del
+   hero quede invisible para siempre. */
+.hero-animated {
+  opacity: 0;
+}
+.hero-animated.is-fallback-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 /* ─── Custom cursor — hide system cursor on hoverable, fine-pointer devices ─ */
 @media (hover: hover) and (pointer: fine) {
   html.custom-cursor-active,

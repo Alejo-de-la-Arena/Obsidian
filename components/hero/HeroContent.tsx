@@ -118,29 +118,33 @@ export function HeroContent() {
     { scope: containerRef },
   )
 
-  // Fallback de seguridad: si después de 3s algún elemento sigue con
-  // opacity 0 (porque el ref no quedó conectado o GSAP no corrió por
-  // SSR/strict mode), forzamos visibilidad para garantizar que el
-  // contenido del hero nunca quede invisible.
+  // Fallback de seguridad: si después de 3s algún elemento `.hero-animated`
+  // sigue con opacity 0, le ponemos la clase `is-fallback-visible` que en
+  // globals.css fuerza opacity:1 y transform:none. Garantiza que el hero
+  // jamás quede invisible aunque GSAP no ejecute por SSR/strict mode/error.
   useEffect(() => {
     const id = window.setTimeout(() => {
-      const targets: (HTMLElement | null)[] = [
-        statusRef.current,
-        eyebrowRef.current,
-        sublineRef.current,
-        scrollHintRef.current,
-      ]
-      if (ctasRef.current) targets.push(...Array.from(ctasRef.current.children) as HTMLElement[])
-      if (metaRef.current) {
-        targets.push(metaRef.current)
-        metaRef.current.querySelectorAll<HTMLElement>('[data-meta-item]').forEach((el) => targets.push(el))
-      }
-      targets.forEach((el) => {
-        if (el && getComputedStyle(el).opacity === '0') {
-          el.style.opacity = '1'
-          el.style.transform = 'none'
+      const root = containerRef.current
+      if (!root) return
+      root.querySelectorAll<HTMLElement>('.hero-animated').forEach((el) => {
+        if (getComputedStyle(el).opacity === '0') {
+          el.classList.add('is-fallback-visible')
         }
       })
+      // Children de contenedores stagger (CTAs).
+      root.querySelectorAll<HTMLElement>('.hero-animated-children').forEach((parent) => {
+        Array.from(parent.children).forEach((child) => {
+          const el = child as HTMLElement
+          if (getComputedStyle(el).opacity === '0') {
+            el.style.opacity = '1'
+            el.style.transform = 'none'
+          }
+        })
+      })
+      // Doble red: el meta div también si quedó invisible.
+      if (metaRef.current && getComputedStyle(metaRef.current).opacity === '0') {
+        metaRef.current.style.opacity = '1'
+      }
     }, 3000)
     return () => window.clearTimeout(id)
   }, [])
@@ -195,13 +199,12 @@ export function HeroContent() {
         {/* Status pill — sobre el badge eyebrow, en flujo */}
         <div
           ref={statusRef}
-          className="flex items-center gap-2.5 font-mono mb-4 md:mb-6"
+          className="hero-animated flex items-center gap-2.5 font-mono mb-4 md:mb-6"
           style={{
             fontSize: 10,
             letterSpacing: '0.3em',
             textTransform: 'uppercase',
             color: 'rgba(240, 247, 240, 0.6)',
-            opacity: 0,
           }}
         >
           <span
@@ -236,14 +239,13 @@ export function HeroContent() {
           />
           <p
             ref={eyebrowRef}
-            className="font-mono"
+            className="hero-animated font-mono"
             style={{
               fontSize: 11,
               letterSpacing: '0.3em',
               textTransform: 'uppercase',
               color: '#00FF88',
               fontWeight: 500,
-              opacity: 0,
             }}
           >
             Buenos Aires · Edición limitada
@@ -255,7 +257,7 @@ export function HeroContent() {
           ref={headlineRef}
           className="font-serif mb-4 md:mb-8 text-bone leading-[1.08] md:leading-[1.1] pb-[0.1em] md:pb-[0.15em]"
           style={{
-            fontSize: 'clamp(36px, 7vw, 78px)',
+            fontSize: 'clamp(34px, min(7vw, 9vh), 78px)',
             fontWeight: 700,
             letterSpacing: '-0.02em',
           }}
@@ -284,12 +286,11 @@ export function HeroContent() {
         {/* Subline */}
         <p
           ref={sublineRef}
-          className="font-sans mb-6 md:mb-12 text-bone leading-[1.55] md:leading-[1.65]"
+          className="hero-animated font-sans mb-6 md:mb-12 text-bone leading-[1.55] md:leading-[1.65]"
           style={{
             fontSize: 'clamp(14px, 1.25vw, 19px)',
             maxWidth: 460,
             fontWeight: 300,
-            opacity: 0,
           }}
         >
           Relojes mecánicos de edición limitada, hechos a mano en Buenos Aires.
@@ -301,7 +302,7 @@ export function HeroContent() {
         {/* CTAs — stack vertical full-width en mobile, horizontal en sm+ */}
         <div
           ref={ctasRef}
-          className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-16 w-full"
+          className="hero-animated-children flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-16 w-full"
         >
           <MagneticButton href="#modelos" variant="primary" fullWidthMobile>
             Ver los relojes
@@ -327,10 +328,9 @@ export function HeroContent() {
             <div
               key={label}
               data-meta-item
-              className="flex flex-col gap-1.5 pl-4"
+              className="hero-animated flex flex-col gap-1.5 pl-4"
               style={{
                 borderLeft: '1px solid rgba(0, 255, 136, 0.35)',
-                opacity: 0,
               }}
             >
               <span className="font-mono text-seiko" style={{ fontSize: 10 }}>
@@ -351,12 +351,11 @@ export function HeroContent() {
       {/* Scroll hint — solo desktop */}
       <div
         ref={scrollHintRef}
-        className="absolute hidden md:flex flex-col items-center gap-3 pointer-events-none"
+        className="hero-animated absolute hidden md:flex flex-col items-center gap-3 pointer-events-none"
         style={{
           zIndex: 3,
           bottom: '40px',
           right: 'clamp(24px, 4vw, 64px)',
-          opacity: 0,
         }}
       >
         <span

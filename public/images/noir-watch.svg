@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" fill="none">
+  <defs>
+    <radialGradient id="noir-face" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+    <linearGradient id="noir-band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="50%" stop-color="#222"/>
+      <stop offset="100%" stop-color="#0d0d0d"/>
+    </linearGradient>
+  </defs>
+  <!-- Correa superior -->
+  <rect x="148" y="20" width="104" height="80" rx="6" fill="url(#noir-band)" stroke="#00FF88" stroke-opacity="0.18" stroke-width="1"/>
+  <line x1="148" y1="50" x2="252" y2="50" stroke="#00FF88" stroke-opacity="0.12" stroke-width="0.5"/>
+  <line x1="148" y1="75" x2="252" y2="75" stroke="#00FF88" stroke-opacity="0.12" stroke-width="0.5"/>
+  <!-- Correa inferior -->
+  <rect x="148" y="300" width="104" height="80" rx="6" fill="url(#noir-band)" stroke="#00FF88" stroke-opacity="0.18" stroke-width="1"/>
+  <line x1="148" y1="325" x2="252" y2="325" stroke="#00FF88" stroke-opacity="0.12" stroke-width="0.5"/>
+  <line x1="148" y1="350" x2="252" y2="350" stroke="#00FF88" stroke-opacity="0.12" stroke-width="0.5"/>
+  <!-- Lugs -->
+  <rect x="142" y="95" width="8" height="20" fill="#181818" stroke="#00FF88" stroke-opacity="0.2"/>
+  <rect x="250" y="95" width="8" height="20" fill="#181818" stroke="#00FF88" stroke-opacity="0.2"/>
+  <rect x="142" y="285" width="8" height="20" fill="#181818" stroke="#00FF88" stroke-opacity="0.2"/>
+  <rect x="250" y="285" width="8" height="20" fill="#181818" stroke="#00FF88" stroke-opacity="0.2"/>
+  <!-- Crown -->
+  <rect x="296" y="195" width="14" height="14" rx="2" fill="#181818" stroke="#00FF88" stroke-opacity="0.3"/>
+  <line x1="298" y1="198" x2="308" y2="198" stroke="#00FF88" stroke-opacity="0.4" stroke-width="0.6"/>
+  <line x1="298" y1="201" x2="308" y2="201" stroke="#00FF88" stroke-opacity="0.4" stroke-width="0.6"/>
+  <line x1="298" y1="204" x2="308" y2="204" stroke="#00FF88" stroke-opacity="0.4" stroke-width="0.6"/>
+  <!-- Caja -->
+  <circle cx="200" cy="200" r="100" fill="#111" stroke="#00FF88" stroke-opacity="0.35" stroke-width="1.5"/>
+  <circle cx="200" cy="200" r="92" fill="url(#noir-face)" stroke="#00FF88" stroke-opacity="0.18" stroke-width="0.8"/>
+  <!-- Bisel -->
+  <circle cx="200" cy="200" r="86" fill="none" stroke="#00FF88" stroke-opacity="0.12" stroke-width="0.5"/>
+  <!-- Índices -->
+  <g stroke="#00FF88" stroke-linecap="round">
+    <line x1="200" y1="120" x2="200" y2="132" stroke-width="2.5" stroke-opacity="0.85"/>
+    <line x1="200" y1="268" x2="200" y2="280" stroke-width="2.5" stroke-opacity="0.85"/>
+    <line x1="120" y1="200" x2="132" y2="200" stroke-width="2.5" stroke-opacity="0.85"/>
+    <line x1="268" y1="200" x2="280" y2="200" stroke-width="2.5" stroke-opacity="0.85"/>
+    <line x1="240" y1="130.5" x2="244" y2="137.4" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="269.5" y1="160" x2="262.6" y2="156" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="269.5" y1="240" x2="262.6" y2="244" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="240" y1="269.5" x2="244" y2="262.6" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="160" y1="269.5" x2="156" y2="262.6" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="130.5" y1="240" x2="137.4" y2="244" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="130.5" y1="160" x2="137.4" y2="156" stroke-width="1.5" stroke-opacity="0.55"/>
+    <line x1="160" y1="130.5" x2="156" y2="137.4" stroke-width="1.5" stroke-opacity="0.55"/>
+  </g>
+  <!-- Subdial seconds -->
+  <circle cx="200" cy="240" r="18" fill="none" stroke="#00FF88" stroke-opacity="0.25" stroke-width="0.7"/>
+  <text x="200" y="232" text-anchor="middle" font-family="monospace" font-size="6" fill="#00FF88" fill-opacity="0.4">SECONDS</text>
+  <!-- Manecillas -->
+  <line x1="200" y1="200" x2="200" y2="148" stroke="#F0F7F0" stroke-width="3" stroke-linecap="round"/>
+  <line x1="200" y1="200" x2="240" y2="180" stroke="#F0F7F0" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="200" y1="200" x2="186" y2="252" stroke="#00FF88" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="200" cy="200" r="4" fill="#00FF88"/>
+  <!-- Marca de marca -->
+  <text x="200" y="172" text-anchor="middle" font-family="serif" font-weight="700" font-size="10" fill="#F0F7F0" fill-opacity="0.7" letter-spacing="3">OBSIDIAN</text>
+  <text x="200" y="184" text-anchor="middle" font-family="monospace" font-size="5" fill="#00FF88" fill-opacity="0.5" letter-spacing="2">NOIR · 01</text>
+</svg>

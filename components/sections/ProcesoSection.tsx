@@ -53,7 +53,6 @@ const STAGES: Stage[] = [
 ]
 
 export function ProcesoSection() {
-  const sectionRef = useRef<HTMLElement>(null)
   const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
@@ -64,14 +63,15 @@ export function ProcesoSection() {
     return () => mq.removeEventListener('change', update)
   }, [])
 
-  if (!isDesktop) return <ProcesoMobile sectionRef={sectionRef} />
-  return <ProcesoDesktop sectionRef={sectionRef} />
+  if (!isDesktop) return <ProcesoMobile />
+  return <ProcesoDesktop />
 }
 
 // ──────────────────────────────────────────────────────────────────────
 //   DESKTOP — versión original (no se toca: cards apilados con reveal).
 // ──────────────────────────────────────────────────────────────────────
-function ProcesoDesktop({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) {
+function ProcesoDesktop() {
+  const sectionRef = useRef<HTMLElement>(null)
   useGSAP(
     () => {
       const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -98,7 +98,7 @@ function ProcesoDesktop({ sectionRef }: { sectionRef: React.RefObject<HTMLElemen
         )
       })
     },
-    { scope: sectionRef as React.RefObject<HTMLElement> },
+    { scope: sectionRef },
   )
 
   return (
@@ -214,162 +214,121 @@ function ProcesoDesktop({ sectionRef }: { sectionRef: React.RefObject<HTMLElemen
 }
 
 // ──────────────────────────────────────────────────────────────────────
-//   MOBILE — sección pinned con cross-fade entre las 4 etapas.
-//   Imagen arriba, texto abajo. Scroll bidireccional fluido (scrub).
+//   MOBILE — 4 cards en scroll vertical normal, sin pin, sin scrub.
+//   Cada card se revela al entrar al viewport.
 // ──────────────────────────────────────────────────────────────────────
-function ProcesoMobile({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) {
-  const stagesWrapRef = useRef<HTMLDivElement>(null)
-  const progressRef = useRef<HTMLDivElement>(null)
-  const [activeIdx, setActiveIdx] = useState(0)
-
+function ProcesoMobile() {
+  const sectionRef = useRef<HTMLElement>(null)
   useGSAP(
     () => {
-      const section = sectionRef.current
-      const wrap = stagesWrapRef.current
-      if (!section || !wrap) return
-
+      const root = sectionRef.current
+      if (!root) return
       const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      const stages = wrap.querySelectorAll<HTMLElement>('[data-stage-mobile]')
-      if (!stages.length) return
-
-      // Estado inicial: todas invisibles excepto la primera.
-      gsap.set(stages, { autoAlpha: 0, y: 40, scale: 0.98 })
-      gsap.set(stages[0], { autoAlpha: 1, y: 0, scale: 1 })
-
-      // Construimos un timeline donde cada stage se cross-fade con el siguiente.
-      // El progress total se reparte en `stages.length - 1` transiciones.
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: () => `+=${stages.length * 100}%`,
-          scrub: noMotion ? 0 : 0.6,
-          pin: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          fastScrollEnd: true,
-          onUpdate: (self) => {
-            const idx = Math.min(
-              stages.length - 1,
-              Math.round(self.progress * (stages.length - 1)),
-            )
-            setActiveIdx(idx)
+      const cards = root.querySelectorAll<HTMLElement>('[data-etapa]')
+      cards.forEach((card) => {
+        gsap.fromTo(
+          card,
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: noMotion ? 0.01 : 0.7,
+            ease: 'power2.out',
+            scrollTrigger: { trigger: card, start: 'top 82%', once: true, fastScrollEnd: true },
           },
-        },
-      })
-
-      const stepDuration = 1
-      stages.forEach((stage, i) => {
-        if (i === 0) return
-        const prev = stages[i - 1]
-        const t = (i - 1) * stepDuration
-        tl.to(prev, { autoAlpha: 0, y: -40, scale: 0.98, duration: stepDuration, ease: 'power2.inOut' }, t)
-        tl.fromTo(
-          stage,
-          { autoAlpha: 0, y: 40, scale: 0.98 },
-          { autoAlpha: 1, y: 0, scale: 1, duration: stepDuration, ease: 'power2.inOut' },
-          t,
         )
       })
-
-      const onResize = () => ScrollTrigger.refresh()
-      window.addEventListener('resize', onResize)
-      return () => {
-        window.removeEventListener('resize', onResize)
-        tl.scrollTrigger?.kill()
-        tl.kill()
-      }
     },
-    { scope: sectionRef as React.RefObject<HTMLElement> },
+    { scope: sectionRef },
   )
 
   return (
     <section
       ref={sectionRef}
       id="proceso"
-      className="relative w-full overflow-hidden"
-      style={{ backgroundColor: '#0A0A0A', height: '100svh' }}
+      className="relative w-full"
+      style={{
+        backgroundColor: '#0A0A0A',
+        paddingTop: 'clamp(72px, 10vh, 110px)',
+        paddingBottom: 'clamp(72px, 10vh, 110px)',
+      }}
       aria-label="Proceso de fabricación OBSIDIAN"
     >
-      {/* Heading flotante arriba — visible siempre durante el pin */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
+        className="mx-auto w-full"
         style={{
-          paddingLeft: 'clamp(24px, 6vw, 64px)',
-          paddingRight: 'clamp(24px, 6vw, 64px)',
-          paddingTop: 'clamp(72px, 9vh, 100px)',
+          maxWidth: 720,
+          paddingLeft: 'clamp(20px, 6vw, 40px)',
+          paddingRight: 'clamp(20px, 6vw, 40px)',
         }}
       >
-        <p
-          className="font-mono"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.4em',
-            textTransform: 'uppercase',
-            color: '#00FF88',
-            marginBottom: 6,
-          }}
-        >
-          El Proceso
-        </p>
-        <h2
-          className="font-serif text-bone"
-          style={{
-            fontSize: 'clamp(22px, 6vw, 32px)',
-            lineHeight: 1.1,
-            letterSpacing: '-0.02em',
-            fontWeight: 700,
-          }}
-        >
-          Cuatro etapas. Tres meses por reloj.
-        </h2>
-      </div>
-
-      {/* Wrap con todos los stages absolutos superpuestos */}
-      <div ref={stagesWrapRef} className="absolute inset-0">
-        {STAGES.map((s) => (
-          <article
-            key={s.number}
-            data-stage-mobile
-            className="absolute inset-0 flex flex-col"
+        {/* Heading */}
+        <div className="mb-12">
+          <span
+            aria-hidden
+            className="block mb-5"
+            style={{ width: 48, height: 1, backgroundColor: '#00FF88' }}
+          />
+          <p
+            className="font-mono mb-3"
             style={{
-              paddingLeft: 'clamp(24px, 6vw, 64px)',
-              paddingRight: 'clamp(24px, 6vw, 64px)',
-              paddingTop: 'clamp(150px, 22vh, 220px)',
-              paddingBottom: 'clamp(60px, 8vh, 80px)',
-              opacity: 0,
-              willChange: 'transform, opacity',
+              fontSize: 10,
+              letterSpacing: '0.4em',
+              textTransform: 'uppercase',
+              color: '#00FF88',
             }}
           >
-            {/* Número decorativo gigante de fondo */}
-            <span
-              aria-hidden
-              className="absolute font-serif pointer-events-none select-none"
+            El Proceso
+          </p>
+          <h2
+            className="font-serif text-bone"
+            style={{
+              fontSize: 'clamp(28px, 7vw, 36px)',
+              lineHeight: 1.1,
+              letterSpacing: '-0.02em',
+              fontWeight: 700,
+            }}
+          >
+            Cuatro etapas. Tres meses por reloj.
+          </h2>
+        </div>
+
+        {/* 4 cards */}
+        <div className="flex flex-col gap-4">
+          {STAGES.map((s) => (
+            <article
+              key={s.number}
+              data-etapa
+              className="relative overflow-hidden"
               style={{
-                fontSize: 'clamp(180px, 50vw, 320px)',
-                color: '#00FF88',
-                opacity: 0.05,
-                top: '20%',
-                right: '-8%',
-                lineHeight: 1,
-                fontWeight: 700,
-                zIndex: 0,
+                background: 'rgba(0, 255, 136, 0.02)',
+                border: '1px solid rgba(0, 255, 136, 0.08)',
+                borderRadius: 12,
+                padding: '32px 24px',
+                opacity: 0,
               }}
             >
-              {s.number}
-            </span>
+              {/* Número decorativo */}
+              <span
+                aria-hidden
+                className="absolute font-serif pointer-events-none select-none"
+                style={{
+                  fontSize: 72,
+                  color: '#00FF88',
+                  opacity: 0.06,
+                  top: -8,
+                  right: 12,
+                  lineHeight: 1,
+                  fontWeight: 700,
+                }}
+              >
+                {s.number}
+              </span>
 
-            {/* Imagen arriba */}
-            <div className="relative z-10" style={{ flex: '0 0 auto' }}>
-              <StageIllustration icon={s.icon} compact />
-            </div>
-
-            {/* Texto abajo */}
-            <div className="relative z-10 mt-6">
               <p
                 className="font-mono mb-3"
                 style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   letterSpacing: '0.4em',
                   textTransform: 'uppercase',
                   color: '#00FF88',
@@ -378,10 +337,10 @@ function ProcesoMobile({ sectionRef }: { sectionRef: React.RefObject<HTMLElement
                 Etapa {s.number}
               </p>
               <h3
-                className="font-serif text-bone mb-3"
+                className="font-serif text-bone mb-4"
                 style={{
-                  fontSize: 'clamp(32px, 9vw, 48px)',
-                  lineHeight: 1.05,
+                  fontSize: 24,
+                  lineHeight: 1.1,
                   fontWeight: 700,
                   letterSpacing: '-0.02em',
                 }}
@@ -389,11 +348,11 @@ function ProcesoMobile({ sectionRef }: { sectionRef: React.RefObject<HTMLElement
                 {s.title}
               </h3>
               <p
-                className="font-sans text-bone mb-3"
+                className="font-sans text-bone mb-4"
                 style={{
-                  fontSize: 14,
-                  lineHeight: 1.55,
-                  opacity: 0.7,
+                  fontSize: 16,
+                  lineHeight: 1.75,
+                  opacity: 0.65,
                   fontWeight: 300,
                 }}
               >
@@ -402,7 +361,7 @@ function ProcesoMobile({ sectionRef }: { sectionRef: React.RefObject<HTMLElement
               <p
                 className="font-mono"
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   letterSpacing: '0.15em',
                   color: '#00FF88',
                   opacity: 0.85,
@@ -410,32 +369,9 @@ function ProcesoMobile({ sectionRef }: { sectionRef: React.RefObject<HTMLElement
               >
                 {s.detail}
               </p>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {/* Indicador de progreso vertical lateral */}
-      <div
-        ref={progressRef}
-        aria-hidden
-        className="absolute flex flex-col gap-2 pointer-events-none"
-        style={{ right: 16, top: '50%', transform: 'translateY(-50%)', zIndex: 20 }}
-      >
-        {STAGES.map((s, i) => {
-          const active = i === activeIdx
-          return (
-            <span
-              key={s.number}
-              className="block rounded-full transition-all duration-300"
-              style={{
-                width: 4,
-                height: active ? 28 : 6,
-                backgroundColor: active ? '#00FF88' : 'rgba(240, 247, 240, 0.25)',
-              }}
-            />
-          )
-        })}
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   )

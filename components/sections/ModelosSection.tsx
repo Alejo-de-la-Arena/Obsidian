@@ -1,9 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
-import { ModelCanvas } from '@/components/models/ModelCanvas'
+import { WatchDisplay } from '@/components/models/WatchDisplay'
 
 type ModelKey = 'NOIR' | 'ALBA' | 'FORGE'
 
@@ -14,6 +14,8 @@ type ModelData = {
   description: string
   specs: { label: string; value: string }[]
   price: string
+  image: string
+  glow: string
 }
 
 const MODELS: ModelData[] = [
@@ -32,6 +34,8 @@ const MODELS: ModelData[] = [
       { label: 'Correa', value: 'Cuero negro liso' },
     ],
     price: 'USD 2.800',
+    image: '/images/noir-watch.png',
+    glow: '#00FF88',
   },
   {
     key: 'ALBA',
@@ -48,6 +52,8 @@ const MODELS: ModelData[] = [
       { label: 'Correa', value: 'Cuero cognac' },
     ],
     price: 'USD 4.500',
+    image: '/images/alba-watch.png',
+    glow: '#D4AA60',
   },
   {
     key: 'FORGE',
@@ -64,10 +70,30 @@ const MODELS: ModelData[] = [
       { label: 'Correa', value: 'NATO multifilamento' },
     ],
     price: 'USD 8.500',
+    image: '/images/forge-watch.png',
+    glow: '#4488FF',
   },
 ]
 
 export function ModelosSection() {
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  if (isDesktop) return <ModelosDesktop />
+  return <ModelosMobile />
+}
+
+// ──────────────────────────────────────────────────────────────────────
+//   DESKTOP — horizontal scroll con pin + scrub.
+// ──────────────────────────────────────────────────────────────────────
+function ModelosDesktop() {
   const sectionRef = useRef<HTMLElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const [activeIdx, setActiveIdx] = useState(0)
@@ -127,17 +153,18 @@ export function ModelosSection() {
         className="flex flex-row h-full"
         style={{ width: `${MODELS.length * 100}vw` }}
       >
-        {MODELS.map((m, i) => (
+        {MODELS.map((m) => (
           <article
             key={m.key}
-            className="grid grid-rows-[42vh_1fr] lg:grid-rows-1 lg:grid-cols-[55fr_45fr] items-center"
+            className="grid grid-cols-[55fr_45fr] items-center"
             style={{ width: '100vw', height: '100svh' }}
           >
             <div className="relative w-full h-full">
-              <ModelCanvas
-                variant={m.key}
-                active={activeIdx === i}
-                className="absolute inset-0 flex items-center justify-center"
+              <WatchDisplay
+                src={m.image}
+                alt={`Reloj ${m.key}`}
+                glowColor={m.glow}
+                modelName={m.key}
               />
             </div>
             <ModelInfo data={m} />
@@ -170,18 +197,102 @@ export function ModelosSection() {
   )
 }
 
-function ModelInfo({ data }: { data: ModelData }) {
+// ──────────────────────────────────────────────────────────────────────
+//   MOBILE — stack vertical: imagen arriba, texto abajo, sin alturas fijas.
+// ──────────────────────────────────────────────────────────────────────
+function ModelosMobile() {
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useGSAP(
+    () => {
+      const root = sectionRef.current
+      if (!root) return
+      const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const cards = root.querySelectorAll<HTMLElement>('[data-model-card]')
+      cards.forEach((card) => {
+        gsap.fromTo(
+          card,
+          { opacity: 0, y: 32 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: noMotion ? 0.01 : 0.7,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: card, start: 'top 82%', once: true, fastScrollEnd: true },
+          },
+        )
+      })
+    },
+    { scope: sectionRef },
+  )
+
+  return (
+    <section
+      ref={sectionRef}
+      id="modelos"
+      className="relative w-full"
+      style={{ backgroundColor: '#0A0A0A' }}
+      aria-label="Modelos OBSIDIAN"
+    >
+      {MODELS.map((m, i) => (
+        <article
+          key={m.key}
+          data-model-card
+          className="flex flex-col"
+          style={{
+            paddingTop: 'clamp(48px, 8vh, 80px)',
+            paddingBottom: i === MODELS.length - 1 ? 60 : 'clamp(32px, 6vh, 48px)',
+            paddingLeft: 'clamp(20px, 6vw, 40px)',
+            paddingRight: 'clamp(20px, 6vw, 40px)',
+            opacity: 0,
+          }}
+        >
+          {/* Imagen arriba */}
+          <div
+            className="relative w-full mx-auto mb-8"
+            style={{ height: 280, maxWidth: 360 }}
+          >
+            <WatchDisplay
+              src={m.image}
+              alt={`Reloj ${m.key}`}
+              glowColor={m.glow}
+              modelName={m.key}
+            />
+          </div>
+
+          {/* Texto abajo */}
+          <ModelInfo data={m} mobile />
+
+          {i < MODELS.length - 1 && (
+            <div
+              className="mx-auto mt-12"
+              aria-hidden
+              style={{ width: 48, height: 1, backgroundColor: '#00FF88', opacity: 0.4 }}
+            />
+          )}
+        </article>
+      ))}
+    </section>
+  )
+}
+
+function ModelInfo({ data, mobile = false }: { data: ModelData; mobile?: boolean }) {
   return (
     <div
-      className="flex flex-col justify-center w-full"
-      style={{
-        paddingLeft: 'clamp(20px, 6vw, 64px)',
-        paddingRight: 'clamp(20px, 6vw, 64px)',
-        paddingTop: 'clamp(16px, 3vh, 32px)',
-        paddingBottom: 'clamp(40px, 5vh, 32px)',
-        overflowY: 'auto',
-        maxHeight: '100%',
-      }}
+      className="flex flex-col w-full"
+      style={
+        mobile
+          ? { padding: 0 }
+          : {
+              justifyContent: 'center',
+              paddingLeft: 'clamp(20px, 6vw, 64px)',
+              paddingRight: 'clamp(20px, 6vw, 64px)',
+              paddingTop: 'clamp(16px, 3vh, 32px)',
+              paddingBottom: 'clamp(40px, 5vh, 32px)',
+              overflowY: 'auto',
+              maxHeight: '100%',
+            }
+      }
     >
       <p
         className="font-mono mb-2 lg:mb-3"
