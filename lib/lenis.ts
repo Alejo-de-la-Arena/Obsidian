@@ -1,4 +1,4 @@
-import type Lenis from '@studio-freight/lenis'
+import type Lenis from 'lenis'
 
 // Configuración de Lenis para OBSIDIAN
 // Easing: cubic que replica expo.out — coherente con los easings GSAP del proyecto
