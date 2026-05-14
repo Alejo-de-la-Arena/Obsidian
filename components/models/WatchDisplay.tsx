@@ -48,11 +48,11 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
         ease: 'none',
       })
 
-      // Glow base pulsante.
+      // Glow base pulsante — más sutil.
       if (!noMotion) {
         gsap.to(glowRef.current, {
-          opacity: 0.3,
-          scale: 1.08,
+          opacity: 0.18,
+          scale: 1.04,
           duration: 2.5,
           repeat: -1,
           yoyo: true,
@@ -60,14 +60,14 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
         })
       }
 
-      // Partículas idle.
+      // Partículas idle — sutiles, casi invisibles.
       if (!noMotion) {
         particlesRef.current.forEach((p, i) => {
           if (!p) return
           gsap.to(p, {
-            y: 'random(-12, 12)',
-            x: 'random(-8, 8)',
-            opacity: 'random(0.1, 0.4)',
+            y: 'random(-8, 8)',
+            x: 'random(-6, 6)',
+            opacity: 'random(0.05, 0.15)',
             duration: 'random(2.5, 4.5)',
             repeat: -1,
             yoyo: true,
@@ -80,14 +80,14 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
 
     const onEnter = () => {
       gsap.to(glowRef.current, {
-        opacity: 0.55,
-        scale: 1.25,
+        opacity: 0.3,
+        scale: 1.15,
         duration: 0.6,
         ease: 'power2.out',
         overwrite: 'auto',
       })
       gsap.to(glowInnerRef.current, {
-        opacity: 0.35,
+        opacity: 0.2,
         scale: 1.0,
         duration: 0.5,
         ease: 'power2.out',
@@ -102,22 +102,22 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
       particlesRef.current.forEach((p) => {
         if (!p) return
         gsap.to(p, {
-          opacity: 'random(0.4, 0.9)',
-          scale: 'random(1.2, 1.8)',
+          opacity: 'random(0.25, 0.55)',
+          scale: 'random(1.1, 1.5)',
           duration: 0.4,
           overwrite: 'auto',
         })
       })
       gsap.fromTo(
         shimmerRef.current,
-        { top: '-10%', opacity: 0.7 },
+        { top: '-10%', opacity: 0.45 },
         { top: '110%', opacity: 0, duration: 0.8, ease: 'power1.inOut' },
       )
     }
 
     const onLeave = () => {
       gsap.to(glowRef.current, {
-        opacity: 0.2,
+        opacity: 0.12,
         scale: 1.0,
         duration: 0.8,
         ease: 'power2.inOut',
@@ -138,7 +138,7 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
       particlesRef.current.forEach((p) => {
         if (!p) return
         gsap.to(p, {
-          opacity: 'random(0.05, 0.2)',
+          opacity: 'random(0.05, 0.15)',
           scale: 1,
           duration: 0.6,
           overwrite: 'auto',
@@ -156,43 +156,40 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
   }, [glowColor])
 
   const particlePositions: React.CSSProperties[] = [
-    { top: '15%', left: '10%' },
-    { top: '5%', left: '45%' },
-    { top: '20%', right: '8%' },
-    { top: '50%', right: '5%' },
-    { bottom: '20%', right: '12%' },
-    { bottom: '8%', left: '40%' },
-    { bottom: '15%', left: '8%' },
-    { top: '50%', left: '4%' },
+    { top: '20%', left: '18%' },
+    { top: '12%', right: '20%' },
+    { bottom: '22%', right: '15%' },
+    { bottom: '15%', left: '22%' },
+    { top: '50%', left: '8%' },
   ]
 
   return (
     <div
       ref={containerRef}
-      className="relative flex items-center justify-center w-full h-full"
-      style={{ minHeight: 280 }}
+      className="relative flex items-center justify-center w-full"
+      style={{ height: '100%' }}
     >
-      {/* Glow principal */}
+      {/* Glow principal — más pequeño y sutil */}
       <div
         ref={glowRef}
         aria-hidden
         className="absolute rounded-full pointer-events-none"
         style={{
-          inset: '15%',
+          inset: '28%',
           background: `radial-gradient(circle, ${glowColor}40 0%, ${glowColor}00 70%)`,
-          opacity: 0.2,
-          filter: 'blur(20px)',
+          opacity: 0.12,
+          filter: 'blur(15px)',
           willChange: 'opacity, transform',
         }}
       />
 
-      {/* Glow inner (hover) */}
+      {/* Glow inner (hover) — más concentrado */}
       <div
         ref={glowInnerRef}
         aria-hidden
         className="absolute rounded-full pointer-events-none"
         style={{
-          inset: '30%',
+          inset: '38%',
           background: `radial-gradient(circle, ${glowColor}60 0%, ${glowColor}00 70%)`,
           opacity: 0,
           transform: 'scale(0.8)',
@@ -201,29 +198,28 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
         }}
       />
 
-      {/* Anillo exterior */}
+      {/* Anillo exterior — más cerca del reloj */}
       <div
         ref={ringRef}
         aria-hidden
         className="absolute rounded-full pointer-events-none"
         style={{
-          inset: '8%',
-          border: `1px solid ${glowColor}1f`,
-          backgroundImage: `conic-gradient(${glowColor}30 0deg, transparent 20deg, transparent 40deg, ${glowColor}30 60deg, transparent 80deg, transparent 160deg, ${glowColor}30 180deg, transparent 200deg, transparent 280deg, ${glowColor}30 300deg, transparent 320deg, transparent 360deg)`,
-          // El conic-gradient no se ve sobre un círculo; lo usamos como hint.
-          opacity: 0.45,
+          inset: '20%',
+          border: `1px solid ${glowColor}10`,
+          backgroundImage: `conic-gradient(${glowColor}20 0deg, transparent 20deg, transparent 40deg, ${glowColor}20 60deg, transparent 80deg, transparent 160deg, ${glowColor}20 180deg, transparent 200deg, transparent 280deg, ${glowColor}20 300deg, transparent 320deg, transparent 360deg)`,
+          opacity: 0.4,
           willChange: 'transform',
         }}
       />
 
-      {/* Anillo interior */}
+      {/* Anillo interior — más adentro */}
       <div
         ref={ring2Ref}
         aria-hidden
         className="absolute rounded-full pointer-events-none"
         style={{
-          inset: '18%',
-          border: `0.5px solid ${glowColor}1a`,
+          inset: '30%',
+          border: `0.5px solid ${glowColor}14`,
           willChange: 'transform',
         }}
       />
@@ -251,20 +247,21 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
           className="absolute rounded-full pointer-events-none"
           style={{
             ...pos,
-            width: i % 3 === 0 ? 4 : i % 2 === 0 ? 3 : 2,
-            height: i % 3 === 0 ? 4 : i % 2 === 0 ? 3 : 2,
+            width: i % 2 === 0 ? 3 : 2,
+            height: i % 2 === 0 ? 3 : 2,
             background: glowColor,
-            opacity: 0.1,
-            boxShadow: `0 0 6px ${glowColor}`,
+            opacity: 0.08,
+            boxShadow: `0 0 5px ${glowColor}`,
             willChange: 'transform, opacity',
           }}
         />
       ))}
 
-      {/* Imagen del reloj */}
+      {/* Imagen del reloj — fill + object-contain garantiza mismo tamaño
+          visible aunque el SVG original cambie de proporción. */}
       <div
         ref={imageRef}
-        className="relative z-10 w-full max-w-[340px] mx-auto"
+        className="relative z-10 w-full h-full"
         style={{
           filter: `drop-shadow(0 20px 60px ${glowColor}33)`,
           willChange: 'transform, filter',
@@ -273,9 +270,9 @@ export function WatchDisplay({ src, alt, glowColor, modelName }: WatchDisplayPro
         <Image
           src={src}
           alt={alt}
-          width={340}
-          height={340}
-          className="w-full h-auto object-contain"
+          fill
+          sizes="(max-width: 1024px) 360px, 480px"
+          className="object-contain"
           priority={modelName === 'NOIR'}
         />
       </div>

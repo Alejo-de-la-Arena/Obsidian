@@ -189,7 +189,7 @@ export function HeroContent() {
       style={{ zIndex: 3 }}
     >
       <div
-        className="relative md:absolute pointer-events-auto flex flex-col w-full pt-[clamp(72px,9vh,108px)] md:pt-[clamp(80px,14vh,140px)] pb-[clamp(28px,5vh,72px)] md:pb-[clamp(48px,10vh,96px)]"
+        className="relative md:absolute pointer-events-auto flex flex-col w-full pt-[clamp(72px,9vh,108px)] md:pt-[clamp(60px,7vh,100px)] pb-[clamp(28px,5vh,72px)] md:pb-[clamp(24px,4vh,60px)]"
         style={{
           paddingLeft: 'clamp(20px, 6vw, 96px)',
           paddingRight: 'clamp(20px, 6vw, 96px)',
@@ -255,11 +255,12 @@ export function HeroContent() {
         {/* H1 */}
         <h1
           ref={headlineRef}
-          className="font-serif mb-4 md:mb-8 text-bone leading-[1.08] md:leading-[1.1] pb-[0.1em] md:pb-[0.15em]"
+          className="font-serif text-bone leading-[1.08] md:leading-[1.1] pb-[0.1em] md:pb-[0.15em]"
           style={{
             fontSize: 'clamp(34px, min(7vw, 9vh), 78px)',
             fontWeight: 700,
             letterSpacing: '-0.02em',
+            marginBottom: 'clamp(8px, 1.5vh, 20px)',
           }}
         >
           {headlineLines.map((line, lineIdx) => (
@@ -286,11 +287,12 @@ export function HeroContent() {
         {/* Subline */}
         <p
           ref={sublineRef}
-          className="hero-animated font-sans mb-6 md:mb-12 text-bone leading-[1.55] md:leading-[1.65]"
+          className="hero-animated font-sans text-bone leading-[1.55] md:leading-[1.65]"
           style={{
             fontSize: 'clamp(14px, 1.25vw, 19px)',
             maxWidth: 460,
             fontWeight: 300,
+            marginBottom: 'clamp(8px, 1.5vh, 16px)',
           }}
         >
           Relojes mecánicos de edición limitada, hechos a mano en Buenos Aires.
@@ -302,7 +304,11 @@ export function HeroContent() {
         {/* CTAs — stack vertical full-width en mobile, horizontal en sm+ */}
         <div
           ref={ctasRef}
-          className="hero-animated-children flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-16 w-full"
+          className="hero-animated-children flex flex-col sm:flex-row gap-3 sm:gap-4 w-full"
+          style={{
+            marginTop: 'clamp(12px, 2vh, 28px)',
+            marginBottom: 'clamp(16px, 2.5vh, 36px)',
+          }}
         >
           <MagneticButton href="#modelos" variant="primary" fullWidthMobile>
             Ver los relojes
@@ -318,7 +324,12 @@ export function HeroContent() {
         <div
           ref={metaRef}
           className="flex flex-wrap gap-x-6 sm:gap-x-10 gap-y-3 sm:gap-y-4"
-          style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+          style={{
+            fontSize: 11,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            marginTop: 'clamp(16px, 2.5vh, 36px)',
+          }}
         >
           {[
             ['01', 'Modelos', '3'],

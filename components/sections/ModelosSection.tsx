@@ -159,7 +159,10 @@ function ModelosDesktop() {
             className="grid grid-cols-[55fr_45fr] items-center"
             style={{ width: '100vw', height: '100svh' }}
           >
-            <div className="relative w-full h-full">
+            <div
+              className="relative w-full mx-auto"
+              style={{ height: 360, maxWidth: 480, flexShrink: 0 }}
+            >
               <WatchDisplay
                 src={m.image}
                 alt={`Reloj ${m.key}`}
@@ -247,10 +250,10 @@ function ModelosMobile() {
             opacity: 0,
           }}
         >
-          {/* Imagen arriba */}
+          {/* Imagen arriba — altura fija idéntica para las 3 cards */}
           <div
             className="relative w-full mx-auto mb-8"
-            style={{ height: 280, maxWidth: 360 }}
+            style={{ height: 280, maxWidth: 360, flexShrink: 0 }}
           >
             <WatchDisplay
               src={m.image}

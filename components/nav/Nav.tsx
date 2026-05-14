@@ -123,6 +123,7 @@ export function Nav() {
           backdropFilter: 'blur(18px) saturate(140%)',
           WebkitBackdropFilter: 'blur(18px) saturate(140%)',
           borderBottom: '1px solid rgba(0, 255, 136, 0.08)',
+          pointerEvents: 'auto',
         }}
         aria-label="Navegación principal"
       >
@@ -183,7 +184,7 @@ export function Nav() {
           aria-label="Abrir menú"
           aria-expanded={open}
           aria-controls="mobile-drawer"
-          onClick={() => setOpen(true)}
+          onClick={() => setOpen((v) => !v)}
           data-cursor="button"
           className="md:hidden relative inline-flex items-center justify-center"
           style={{
@@ -192,6 +193,8 @@ export function Nav() {
             border: '1px solid rgba(0, 255, 136, 0.35)',
             borderRadius: 2,
             backgroundColor: 'rgba(0, 255, 136, 0.04)',
+            zIndex: 201,
+            pointerEvents: 'auto',
           }}
         >
           <span className="sr-only">Abrir menú</span>
@@ -242,6 +245,7 @@ export function Nav() {
           WebkitBackdropFilter: 'blur(6px)',
           visibility: 'hidden',
           opacity: 0,
+          pointerEvents: open ? 'auto' : 'none',
         }}
       />
 
@@ -263,6 +267,7 @@ export function Nav() {
           borderLeft: '1px solid rgba(0, 255, 136, 0.18)',
           boxShadow: '-24px 0 80px -20px rgba(0, 0, 0, 0.7)',
           transform: 'translateX(100%)',
+          pointerEvents: open ? 'auto' : 'none',
         }}
       >
         {/* Header del drawer — logo + botón X */}

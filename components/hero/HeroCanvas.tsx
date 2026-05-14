@@ -137,7 +137,12 @@ export function HeroCanvas() {
     const aspect = (mount.clientWidth || 1) / (mount.clientHeight || 1)
     const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 100)
     // Mobile: cámara más cerca para ver el reloj grande de fondo (z 6.5).
-    camera.position.set(0, 0.2, isMobile ? 6.5 : 7.5)
+    // Mobile: cámara más lejos + FOV ligeramente abierto, el reloj entra completo.
+    const cameraFov = isMobile ? 45 : 38
+    const cameraZ = isMobile ? 14 : 7.5
+    camera.fov = cameraFov
+    camera.position.set(0, 0.2, cameraZ)
+    camera.updateProjectionMatrix()
     camera.lookAt(0, 0, 0)
 
     // ─── Escena ──────────────────────────────────────────────────────
@@ -254,6 +259,9 @@ export function HeroCanvas() {
     const rightOffsetX = isMobile ? 0 : 2.0
     const baseY = isMobile ? -1.1 : 0
     watchPivot.position.set(rightOffsetX, baseY, 0)
+    // Mobile: además del scale por Box3, achicamos el grupo entero para
+    // garantizar que el reloj entre completo dentro del canvas (50vh).
+    if (isMobile) watchPivot.scale.setScalar(0.65)
     // Cara del reloj de frente — sin tilt 3/4. El mouse da el sutil
     // parallax (±0.15 rad) sin nunca esconder la esfera.
     watchPivot.rotation.set(0, 0, 0)
@@ -426,8 +434,8 @@ export function HeroCanvas() {
     <div
       ref={mountRef}
       aria-hidden
-      className="absolute left-0 right-0 top-0 h-[100svh] md:h-full"
-      style={{ zIndex: 1 }}
+      className="absolute left-0 right-0 top-0 h-[50vh] md:h-full"
+      style={{ zIndex: 1, pointerEvents: 'none' }}
     />
   )
 }
